@@ -1,39 +1,26 @@
 import argparse
+import os
 
-import requests
+import yaml
+
+import geocode
+import forecast as fc
 
 
-def clean_forecast(forecast):
-    return forecast.replace('. ', '.\n')
+with open(os.path.join(os.getcwd(), 'config.yml'), 'r') as conffile:
+    config = yaml.safe_load(conffile)
 
-
-def get_forecast(x, y):
-    try:
-        points_resp = requests.get(f'https://api.weather.gov/points/{x},{y}')
-        points_resp.raise_for_status()
-        office = points_resp.json()
-
-        city = office['properties']['relativeLocation']['properties']['city']
-        state = office['properties']['relativeLocation']['properties']['state']
-
-        forecast_endpt = office['properties']['forecast']
-
-        forecast_resp = requests.get(forecast_endpt)
-        forecast_resp.raise_for_status()
-        forecast = forecast_resp.json()
-
-        forecast_p0 = forecast['properties']['periods'][0]
-    except Exception as e:
-        raise e
-    finally:
-        return f'{forecast_p0["name"]}\'s forecast for {city}, {state}:\n{clean_forecast(forecast_p0["detailedForecast"])}'
+def thorcast(city, state):
+    coordinates = geocode.geocode(city, state, config['GoogleMapsAPIKey'])
+    forecast = fc.get_forecast(**coordinates)
+    return forecast
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-x', help='X coordinate of your current location', type=float)
-    parser.add_argument('-y', help='Y coordinate of your current location', type=float)
+    parser.add_argument('-c', '--city', help='Name of city you want forcast for', type=str)
+    parser.add_argument('-s', '--state', help='Y coordinate of your current location', type=str)
     args = parser.parse_args()
 
-    print(get_forecast(args.x, args.y))
+    print(thorcast(args.city, args.state))
 
