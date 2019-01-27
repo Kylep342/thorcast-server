@@ -15,10 +15,10 @@ thorcast.py -c Chicago -s IL
 ```
 Example output:
 ```bash
-This Afternoon\'s forecast for Chicago, IL:
+"This Afternoon's forecast for Chicago, IL:
 Partly sunny.
 High near 12, with temperatures falling to around 9 in the afternoon.
-South southwest wind around 5 mph.
+South southwest wind around 5 mph."
 ```
 
 ## Upcoming features
