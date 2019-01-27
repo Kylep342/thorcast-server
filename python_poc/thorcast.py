@@ -1,3 +1,4 @@
+#!usr/bin/env python
 import argparse
 import os
 
@@ -23,4 +24,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(thorcast(args.city, args.state))
-
