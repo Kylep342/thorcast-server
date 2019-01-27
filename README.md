@@ -10,9 +10,11 @@ Thorcast is currently a command line app, but will be a Discord/Slack chatbot th
 
 ## Usage
 Example command:
-```thorcast.py -c Chicago -s IL```
-Example output:
+```bash
+thorcast.py -c Chicago -s IL
 ```
+Example output:
+```bash
 This Afternoon's forecast for Chicago, IL:
 Partly sunny.
 High near 12, with temperatures falling to around 9 in the afternoon.
