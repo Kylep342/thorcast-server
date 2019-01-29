@@ -23,6 +23,6 @@ def get_forecast(lat, lng):
         forecast_p0 = forecast['properties']['periods'][0]
     except Exception as e:
         raise e
-    finally:
+    else:
         return f'{forecast_p0["name"]}\'s forecast for {city}, {state}:\n{clean_forecast(forecast_p0["detailedForecast"])}'
 
