@@ -6,7 +6,7 @@ FROM python:3.7.2
 # RUN apt-get install python -y 
 
 # setup of thorcast
-COPY . /app
+ADD . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
 
