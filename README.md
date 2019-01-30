@@ -3,7 +3,7 @@ Thorcast is currently a command line app, but will be a Discord/Slack chatbot th
 
 ## Getting started
 - Clone the repo at https://github.com/Kylep342/thorcast.git
-- Set up your own 'config.yml' file in the structure demonstrated in config.yml.example
+- Set up your own 'env.list' file in the structure demonstrated in env.list.example
 - Run `build.sh` to set up the Docker Image
 
 ## Usage

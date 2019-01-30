@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker run -it thorcast
+docker run --env-file env.list -it thorcast
