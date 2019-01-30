@@ -3,26 +3,32 @@ Thorcast is currently a command line app, but will be a Discord/Slack chatbot th
 
 ## Getting started
 - Clone the repo at https://github.com/Kylep342/thorcast.git
-- Set up a python virtual environment. **\*\*Please do this in a directory separate from this project\*\***
-- Activate the virtual environment and install dependencies with 'pip install -r requirements.txt'
-- Navigate to the 'python_poc' folder from the project root
 - Set up your own 'config.yml' file in the structure demonstrated in config.yml.example
+- Run `build.sh` to set up the Docker Image
 
 ## Usage
-Example command:
+Example:
 ```bash
-thorcast.py -c Chicago -s IL
-```
-Example output:
-```bash
-"This Afternoon's forecast for Chicago, IL:
-Partly sunny.
-High near 12, with temperatures falling to around 9 in the afternoon.
-South southwest wind around 5 mph."
+run.sh
+
+Welcome to Thorcast!
+
+Please enter the city and state, separated by a comma, to retrieve a forecast.
+Chicago, IL
+
+
+
+Tonight's forecast for Chicago, IL:
+Patchy blowing snow and scattered snow showers.
+Mostly cloudy.
+Low around -21, with temperatures rising to around -19 overnight.
+Wind chill values as low as -47.
+West wind around 20 mph, with gusts as high as 35 mph.
+Chance of precipitation is 30%.
 ```
 
 ## Upcoming features
 - Migration from command line app to Discord
 - Slack support
-- Move to Rust
+- Move to Rust/Go
 
