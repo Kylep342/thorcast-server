@@ -1,6 +1,6 @@
 import os
 
-import thorcast
+import thorcast.thorcast as thorcast
 
 
 def load_config():
@@ -17,7 +17,7 @@ def main():
         except ValueError:
             print('Please enter city, then state, separated by a comma (",")\n')
             continue
-        print('\n\n\n', thorcast.thorcast(city, state, config.get('GOOGLE_MAPS_API_KEY')), sep='', end='\n\n\n')
+        print('\n\n\n', thorcast.lookup(city, state, config.get('GOOGLE_MAPS_API_KEY')), sep='', end='\n\n\n')
         another = input('\nWould you like to check another forecast? [y/n]\n')
         if another.lower() in ['n', 'no']:
             exit()
