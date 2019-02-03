@@ -8,14 +8,10 @@ Thorcast is currently a command line app, but will be a Discord/Slack chatbot th
 
 ## Usage
 Example:
-```bash
-run.sh
+`run.sh` should start the server at 0.0.0.0:5000
 
-Welcome to Thorcast!
-
-Please enter the city and state, separated by a comma, to retrieve a forecast.
-Chicago, IL
-
+```Bash
+curl http://0.0.0.0:5000/thorcast/city=Chicago&state=IL
 
 
 Tonight's forecast for Chicago, IL:
