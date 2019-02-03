@@ -1,7 +1,10 @@
+import os
+
 import requests
 
 
-def geocode(city, state, apikey):
+def geocode(city, state):
+    apikey = os.getenv('GOOGLE_MAPS_API_KEY')
     fmt_city = city.replace(' ', '+')
     fmt_state = state.upper()
     geocode_api = 'https://maps.googleapis.com/maps/api/geocode/json'
