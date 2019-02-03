@@ -7,8 +7,9 @@ Thorcast is currently a command line app, but will be a Discord/Slack chatbot th
 - Run `build.sh` to set up the Docker Image
 
 ## Usage
-Example:
 `run.sh` should start the server at 0.0.0.0:5000
+
+Example:
 
 ```Bash
 curl http://0.0.0.0:5000/thorcast/city=Chicago&state=IL
