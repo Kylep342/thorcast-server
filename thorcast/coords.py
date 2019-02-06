@@ -21,36 +21,32 @@ class Geocodex(object):
         pass
 
     def register(self, city, state, lat, lng):
-        self.conn.execute("""
-            INSERT INTO geocodex (
-                city,
-                state,
-                lat,
-                lng, 
-                created_at
-            ) VALUES (?, ?, ?, ?)
-            ;""",
-            city,
-            state,
-            lat,
-            lng
-        )
+        insert_template = sqlalchemy.sql.text("""
+            INSERT INTO geocodex (city, state, lat, lng, requests)
+            VALUES (:city, :state, :lat, :lng, :requests)
+        ;""")
+        bind_params = {'city': city, 'state': state, 'lat': lat, 'lng': lng, 'requests': 1}
+        self.conn.execute(insert_template, **bind_params) 
     
     def locate(self, city, state):
-        rows = self.conn.execute("""
-            SELECT
-                lat,
-                lng
+        query_template = sqlalchemy.sql.text("""
+            SELECT lat, lng
             FROM geocodex
-            WHERE city = ?
-            AND state = ?
-            ;""",
-            city,
-            state
-        )
-        results = rows.fetchall()
-        if results:
-            coordinates = {'lat': results[0], 'lng': results[1]}
+            WHERE city = :city
+            AND state = :state
+        ;""")
+        bind_params = {'city': city, 'state': state}
+        results = self.conn.execute(query_template, **bind_params)
+        row = results.fetchone()
+        if row:
+            coordinates = {'lat': row['lat'], 'lng': row['lng']}
+            update_template = sqlalchemy.sql.text("""
+                UPDATE geocodex
+                SET requests = requests + 1
+                WHERE city = :city
+                AND state = :state
+            ;""")
+            self.conn.execute(update_template, **bind_params)
+            return coordinates
         else:
-            coordinates = False
-        return coordinates
+            return False
