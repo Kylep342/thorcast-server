@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t thorcast .
+docker build -t kylep342/thorcast .
