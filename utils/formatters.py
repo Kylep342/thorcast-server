@@ -4,6 +4,15 @@ import re
 
 
 def _sanitize_state(state):
+    """
+    Function to standardize requested state to 2 character postal code
+
+    Arguments:
+        state   [string]:   Name of a state, home to the requested city
+
+    Returns:
+        state   [string]:   2 char, captialized state postal code
+    """
     states = {
         'alabama': 'AL', 'al': 'AL',
         'alaska': 'AK', 'ak': 'AK',
@@ -63,8 +72,29 @@ def _sanitize_state(state):
 
 
 def _sanitize_city(city):
-    return re.sub("[^a-zA-Z ']+", ' ', city)
+    """
+    Function to reformat URL-friendly city names.
+    Replace any '%20' sequences with ' ' (space literal)
+
+    Arguments:
+        city    [string]:   Name of a city to forecast
+
+    Returns:
+        city    [string]:   Formatted name of city
+    """
+    return re.sub('%(20)?', ' ', city)
 
 
 def sanitize_location(city, state):
+    """
+    Public wrapper function to format city and state in a request
+
+    Arguments:
+        city    [string]:   Name of a city to forecast
+        state   [string]:   Name of a state to forecast
+
+    Returns:
+        city    [string]:   Formatted name of city
+        state   [string]:   2 char, capitalized state postal code
+    """
     return _sanitize_city(city), _sanitize_state(state)

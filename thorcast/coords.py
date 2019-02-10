@@ -81,7 +81,7 @@ class Geocodex(object):
         query_template = sqlalchemy.sql.text("""
             SELECT lat, lng
             FROM geocodex
-            WHERE city = :city
+            WHERE LOWER(city) = LOWER(:city)
             AND state = :state
         ;""")
         bind_params = {'city': city, 'state': state}
