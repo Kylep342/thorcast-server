@@ -1,5 +1,5 @@
 """
-This file contains functionality to interface with a database
+Database interface utility
 
 The database is used to store coordinates of previously requested
 locations. This is implemented to prevent going over GCP's free

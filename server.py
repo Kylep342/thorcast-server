@@ -11,16 +11,27 @@ import os
 from flask import Flask
 
 import thorcast.thorcast as thorcast
-import thorcast.coords as coords
+import thorcast.geocodex as gx
+import thorcast.weather_cache as wc
 
 
-USERNAME = os.getenv('THORCAST_DB_USERNAME')
-PASSWORD = os.getenv('THORCAST_DB_PASSWORD')
-HOST = os.getenv('THORCAST_DB_HOST')
-PORT = os.getenv('THORCAST_DB_PORT')
-DB = os.getenv('THORCAST_DB_NAME')
+GC_USERNAME = os.getenv('THORCAST_DB_USERNAME')
+GC_PASSWORD = os.getenv('THORCAST_DB_PASSWORD')
+GC_HOST = os.getenv('THORCAST_DB_HOST')
+GC_PORT = os.getenv('THORCAST_DB_PORT')
+GC_DB = os.getenv('THORCAST_DB_NAME')
 
-geocodex = coords.Geocodex(USERNAME, PASSWORD, HOST, PORT, DB)
+geocodex = gx.Geocodex(
+    GC_USERNAME,
+    GC_PASSWORD,
+    GC_HOST,
+    GC_PORT,
+    GC_DB
+)
+
+weather_cache = wc.WeatherCache(
+
+)
 
 app = Flask(__name__)
 

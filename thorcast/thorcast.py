@@ -19,5 +19,5 @@ def lookup(city, state, thorcast_conn):
     if not coordinates:
         coordinates = geocode.geocode(city, state)
         thorcast_conn.register(city, state, **coordinates)
-    forecast = fc.get_forecast(**coordinates)
+    forecast = fc.forecast_from_api(**coordinates)
     return forecast
