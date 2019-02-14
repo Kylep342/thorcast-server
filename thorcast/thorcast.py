@@ -10,9 +10,11 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
     Main API function. Facilitates forecasting from request.
 
     Arguments:
-        city:           [string]:
-        state:          [string]:   
+        city:           [string]:       The city name to forcast
+        state:          [string]:       The state hosting the city
+        period:         [string]:       The day/time to forecast
         thorcast_conn:  [sqlalchemy.engine.base.Connection]: DB conn
+        redis_conn:     [redis.Redis]:  Redis connection object
     """
     period = fmts.sanitize_period(period)
     city, state = fmts.sanitize_location(city, state)

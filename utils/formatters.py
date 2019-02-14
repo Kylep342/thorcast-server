@@ -104,15 +104,15 @@ def sanitize_location(city, state):
 
 
 def sanitize_period(period):
-    suffix = '_night' if 'night' in period.lower() else ''
-    if period.lower() == 'today':
+    suffix = '_night' if re.search('night', period.lower()) else ''
+    if re.search('today', period.lower()):
         today = datetime.datetime.now()
         prefix = clndr.day_of_week(today)
-    elif period.lower() == 'tomorrow':
+    elif re.search('tomorrow', period.lower()):
         tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
         prefix = clndr.day_of_week(tomorrow)
     else:
-        prefix = period.lower()
+        prefix = re.sub(' night', '', period.lower())
     return f'{prefix + suffix}'
 
 
