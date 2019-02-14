@@ -1,11 +1,10 @@
 import datetime
 
 
-def day_of_week(dt_str):
-    dt = datetime.datetime.strptime(dt_str, '%Y-%m-%dT%H:%M:%S%z')
+def day_of_week(dt):
     dow = dt.weekday()
 
-    dow_register = {
+    day_of_week_codex = {
         0: 'monday',
         1: 'tuesday',
         2: 'wednesday',
@@ -15,4 +14,4 @@ def day_of_week(dt_str):
         6: 'sunday'
     }
 
-    return dow_register[dow]
+    return day_of_week_codex[dow]

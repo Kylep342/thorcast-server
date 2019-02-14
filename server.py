@@ -29,8 +29,16 @@ geocodex = gx.Geocodex(
     GC_DB
 )
 
-weather_cache = wc.WeatherCache(
+REDIS_HOST = os.getenv('REDIS_HOST')
+REDIS_PORT = os.getenv('REDIS_PORT')
+REDIS_DB = os.getenv('REDIS_DB')
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD')
 
+weather_cache = wc.WeatherCache(
+    REDIS_HOST,
+    REDIS_PORT,
+    REDIS_DB,
+    REDIS_PASSWORD
 )
 
 app = Flask(__name__)
@@ -41,9 +49,17 @@ def home():
     return('<html><body><h1>Welcome to Thorcast!</h1></body></html>')
 
 
-@app.route('/thorcast/city=<city>&state=<state>')
-def lookup_forecast(city, state):
-    return thorcast.lookup(city, state, geocodex)
+@app.route('/thorcast/city=<city>&state=<state>', defaults={'period': 'today'})
+@app.route('/thorcast/city=<city>&state=<state>&period=<period>')
+def lookup_forecast(city, state, period):
+    forecast_json = thorcast.lookup(
+        city,
+        state,
+        period,
+        geocodex,
+        weather_cache
+    )
+    return thorcast.deliver(forecast_json)
 
 
 if __name__ == '__main__':

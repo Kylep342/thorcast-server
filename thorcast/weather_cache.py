@@ -8,6 +8,8 @@ import json
 
 import redis
 
+import utils.calendar as clndr
+
 
 class WeatherCache(object):
     def __init__(self, host, port, db, password):
@@ -26,5 +28,13 @@ class WeatherCache(object):
         return value
     
     def cache_forecasts(self, city, state, forecasts):
-        today = datetime.datetime.utcnow()
-
+        for forecast in forecasts:
+            try:
+                dt_str = forecast['startTime']
+                dt = datetime.datetime.strptime(dt_str, '%Y-%m-%dT%H:%M:%S%z')
+                dayname = clndr.day_of_week(dt)
+                suffix = '_night' if not forecast['isDaytime'] else ''
+                key = f'{city}_{state}_{dayname}{suffix}'.lower().replace(' ', '_')
+                self.cache(key, forecast)
+            except Exception as e:
+                raise e
