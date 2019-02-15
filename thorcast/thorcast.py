@@ -1,5 +1,3 @@
-import argparse
-
 import thorcast.geocode as geocode
 import thorcast.forecast as fc
 import utils.formatters as fmts
@@ -32,5 +30,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
     return forecast
 
 
-def deliver(forecast_json):
-    return forecast_json['detailedForecast']
+def deliver(city, state, period, forecast_json):
+    period = period.replace('_', ' ').capitalize()
+    forecast = forecast_json['detailedForecast'].replace('. ', '.\n')
+    return f"{period}'s forecast for {city}, {state}:" + '\n' + forecast

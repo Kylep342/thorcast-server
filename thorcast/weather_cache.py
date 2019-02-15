@@ -16,7 +16,14 @@ class WeatherCache(object):
         self.conn = redis.Redis(host=host, port=port, db=db, password=password)
     
     def cache(self, key, value):
-        return self.conn.set(key, json.dumps(value))
+        # Get time at beginning of transaction
+        # Use time to compute expiry of key (beginning of the next day)
+        ts = datetime.datetime.now()
+        return self.conn.set(
+            key,
+            json.dumps(value),
+            ex=(86400 - (ts.hour * 3600 + ts.minute * 60 + ts.second))
+        )
     
     def lookup(self, key):
         try:

@@ -59,7 +59,7 @@ def lookup_forecast(city, state, period):
         geocodex,
         weather_cache
     )
-    return thorcast.deliver(forecast_json)
+    return thorcast.deliver(city, state, period, forecast_json)
 
 
 if __name__ == '__main__':
