@@ -1,5 +1,6 @@
 # Exclude Python cache files from image
 **/__pycache__
+**/*.pyc
 
 # No need to hold example files for env configuration in image
 env.list
@@ -7,6 +8,7 @@ env.list.example
 
 #
 README.md
+.gitignore
 
 #
 build.sh

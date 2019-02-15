@@ -4,6 +4,17 @@ import requests
 
 
 def geocode(city, state):
+    """
+    Function to retrieve coordinates for a city and state
+
+    Arguments:
+        city    [string]:   Name of the city to forecast
+        state   [string]:   Name of the state hosting the city
+
+    Returns:
+        coorinates  [dict]: Coordinate pair of city and state
+                            in the form {'lat':, 'lng':}
+    """
     apikey = os.getenv('GOOGLE_MAPS_API_KEY')
     fmt_city = city.replace(' ', '+')
     fmt_state = state.upper()

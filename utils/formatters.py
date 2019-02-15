@@ -1,6 +1,9 @@
 """
 """
+import datetime
 import re
+
+import utils.calendar as clndr
 
 
 def _sanitize_state(state):
@@ -98,3 +101,20 @@ def sanitize_location(city, state):
         state   [string]:   2 char, capitalized state postal code
     """
     return _sanitize_city(city), _sanitize_state(state)
+
+
+def sanitize_period(period):
+    suffix = '_night' if re.search('night', period.lower()) else ''
+    if re.search('today', period.lower()):
+        today = datetime.datetime.now()
+        prefix = clndr.day_of_week(today)
+    elif re.search('tomorrow', period.lower()):
+        tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
+        prefix = clndr.day_of_week(tomorrow)
+    else:
+        prefix = re.sub(' night', '', period.lower())
+    return f'{prefix + suffix}'
+
+
+def format_period(period):
+    pass
