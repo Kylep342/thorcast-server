@@ -6,6 +6,7 @@ Has Database connection setup, config loading, and routes
 Author: Kyle Pekosh
 Copyright 2019 by Kyle Pekosh
 """
+import json
 import os
 
 from flask import Flask
@@ -49,8 +50,8 @@ def home():
     return('<html><body><h1>Welcome to Thorcast!</h1></body></html>')
 
 
-@app.route('/thorcast/city=<city>&state=<state>', defaults={'period': 'today'})
-@app.route('/thorcast/city=<city>&state=<state>&period=<period>')
+@app.route('/api/city=<city>&state=<state>', defaults={'period': 'today'})
+@app.route('/api/city=<city>&state=<state>&period=<period>')
 def lookup_forecast(city, state, period):
     forecast_json = thorcast.lookup(
         city,
@@ -59,7 +60,13 @@ def lookup_forecast(city, state, period):
         geocodex,
         weather_cache
     )
-    return thorcast.deliver(city, state, period, forecast_json)
+    data = thorcast.deliver(city, state, period, forecast_json)
+    response = app.response_class(
+        response=json.dumps(data),
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 if __name__ == '__main__':

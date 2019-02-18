@@ -33,4 +33,4 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
 def deliver(city, state, period, forecast_json):
     period = period.replace('_', ' ').capitalize()
     forecast = forecast_json['detailedForecast'].replace('. ', '.\n')
-    return f"{period}'s forecast for {city}, {state}:" + '\n' + forecast
+    return {'forecast': f"{period}'s forecast for {city}, {state}" + '\n' + forecast}
