@@ -27,6 +27,8 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
         forecasts = forecasts_json['properties']['periods']
         redis_conn.cache_forecasts(city, state, forecasts)
         forecast = redis_conn.lookup(key)
+    else:
+        thorcast_conn.increment(city, state)
     return forecast
 
 

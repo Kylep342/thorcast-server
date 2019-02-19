@@ -99,3 +99,14 @@ class Geocodex(object):
             return coordinates
         else:
             return False
+
+
+    def increment(self, city, state):
+        update_template = sqlalchemy.sql.text("""
+            UPDATE geocodex
+            SET requests = requests + 1
+            WHERE city = :city
+            AND state = :state
+        ;""")
+        bind_params = {'city': city, 'state': state}
+        self.conn.execute(update_template, **bind_params)

@@ -85,7 +85,7 @@ def _sanitize_city(city):
     Returns:
         city    [string]:   Formatted name of city
     """
-    return re.sub('%(20)?', ' ', city)
+    return ' '.join([word.capitalize() for word in re.sub('(%20)|(_)|(\s+)', ' ', city).split()])
 
 
 def sanitize_location(city, state):
