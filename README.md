@@ -3,6 +3,7 @@ Thorcast is a Discord/Slack chatbot that provides weather forecasts on demand
 
 ## Getting started
 - Clone the repo at https://github.com/Kylep342/thorcast.git
+- Run tests: `cd tests; pytest`
 - Set up your own 'env.list' file in the structure demonstrated in env.list.example
 - Run `build.sh` to set up the Docker Image
 
