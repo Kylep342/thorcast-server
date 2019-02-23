@@ -1,3 +1,5 @@
+import time
+
 import thorcast.geocode as geocode
 import thorcast.forecast as fc
 import utils.formatters as fmts
@@ -17,9 +19,29 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
     period = fmts.sanitize_period(period)
     city, state = fmts.sanitize_location(city, state)
     key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
-    forecast = redis_conn.lookup(key)
+
+    redis_retries = 5
+    while redis_retries:
+        try:
+            forecast = redis_conn.lookup(key)
+            break
+        except redis.exceptions.ConnectionError as e:
+            if redis_retries == 0:
+                raise e
+            redis_retries -= 1
+            time.sleep(0.5)
+
     if not forecast:
-        coordinates = thorcast_conn.locate(city, state)
+        pg_retries = 5
+        while retries:
+            try:
+                coordinates = thorcast_conn.locate(city, state)
+                break
+            except sqlalchemy.exc.OperationalError as e:
+                if pg_retries == 0:
+                    raise e
+                pg_retries -= 1
+                time.sleep(0.5)
         if not coordinates:
             coordinates = geocode.geocode(city, state)
             thorcast_conn.register(city, state, **coordinates)
