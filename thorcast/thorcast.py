@@ -1,5 +1,8 @@
 import time
 
+import redis
+import sqlalchemy
+
 import thorcast.geocode as geocode
 import thorcast.forecast as fc
 import utils.formatters as fmts
@@ -33,7 +36,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
 
     if not forecast:
         pg_retries = 5
-        while retries:
+        while pg_retries:
             try:
                 coordinates = thorcast_conn.locate(city, state)
                 break
