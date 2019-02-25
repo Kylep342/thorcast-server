@@ -8,7 +8,7 @@ import thorcast.forecast as fc
 import utils.formatters as fmts
 
 
-def lookup(city, state, period, thorcast_conn, redis_conn):
+def lookup(city, state, period, thorcast_conn, redis_conn, logger):
     """
     Main API function. Facilitates forecasting from request.
 
@@ -29,7 +29,10 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
             forecast = redis_conn.lookup(key)
             break
         except redis.exceptions.ConnectionError as e:
+            logger.info('Disconnected from Redis. Attempting to reconnect...')
+            logger.info(f'Attempt {6 - redis_retries}')
             if redis_retries == 0:
+                logger.error('Connection to Redis lost')
                 raise e
             redis_retries -= 1
             time.sleep(0.5)
@@ -41,7 +44,10 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
                 coordinates = thorcast_conn.locate(city, state)
                 break
             except sqlalchemy.exc.OperationalError as e:
-                if pg_retries == 0:
+                logger.info('Disconnected from Postgres. Attempting to reconnect...')
+                logger.info(f'Attempt {6 - redis_retries}')
+                if not pg_retries:
+                    logger.error('Connection to Postgres lost')
                     raise e
                 pg_retries -= 1
                 time.sleep(0.5)
@@ -57,7 +63,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn):
     return forecast
 
 
-def deliver(city, state, period, forecast_json):
+def deliver(city, state, period, forecast_json, logger):
     period = period.replace('_', ' ').capitalize()
     forecast = forecast_json['detailedForecast'].replace('. ', '.\n')
     return {'forecast': f"{period}'s forecast for {city}, {state}" + '\n' + forecast}

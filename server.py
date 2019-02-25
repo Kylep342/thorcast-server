@@ -7,7 +7,9 @@ Author: Kyle Pekosh
 Copyright 2019 by Kyle Pekosh
 """
 import json
+import logging
 import os
+import sys
 
 from flask import Flask
 
@@ -42,6 +44,16 @@ weather_cache = wc.WeatherCache(
     REDIS_PASSWORD
 )
 
+root = logging.getLogger(__name__)
+
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+
+
+
 app = Flask(__name__)
 
 
@@ -58,9 +70,10 @@ def lookup_forecast(city, state, period):
         state,
         period,
         geocodex,
-        weather_cache
+        weather_cache,
+        root
     )
-    data = thorcast.deliver(city, state, period, forecast_json)
+    data = thorcast.deliver(city, state, period, forecast_json, root)
     response = app.response_class(
         response=json.dumps(data),
         status=200,

@@ -39,7 +39,7 @@ class Geocodex(object):
             db       [string]: Name of the database
         """
         self.conn_str = gen_conn_str(username, password, host, port, db)
-        self.engine = sqlalchemy.create_engine(self.conn_str)
+        self.engine = sqlalchemy.create_engine(self.conn_str, pool_pre_ping=True)
         self.conn = self.engine.connect()
 
     def _exists(self):
