@@ -48,7 +48,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
                 break
             except sqlalchemy.exc.OperationalError as e:
                 logger.info('Disconnected from Postgres. Attempting to reconnect...')
-                logger.info(f'Attempt {6 - redis_retries}')
+                logger.info(f'Attempt {6 - pg_retries}')
                 if not pg_retries:
                     logger.error('Connection to Postgres lost')
                     raise e
