@@ -23,6 +23,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
     city, state = fmts.sanitize_location(city, state)
     key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
 
+    logger.info(f'Checing Redis for forecast with key {key}')
     redis_retries = 5
     while redis_retries:
         try:
@@ -38,9 +39,11 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
             time.sleep(0.5)
 
     if not forecast:
+        logger.info('Forecast not found')
         pg_retries = 5
         while pg_retries:
             try:
+                logger.info(f'Looking up coordinates for {city}, {state}')
                 coordinates = thorcast_conn.locate(city, state)
                 break
             except sqlalchemy.exc.OperationalError as e:
@@ -52,13 +55,20 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
                 pg_retries -= 1
                 time.sleep(0.5)
         if not coordinates:
+            logger.info('Coordinates not found')
+            logger.info('Fetching coordinates from Google maps API')
             coordinates = geocode.geocode(city, state)
+            logger.info('Coordinates fetched')
+            logger.info(f'Saving coordinates {coordinates} to the database')
             thorcast_conn.register(city, state, **coordinates)
+        logger.info('Fetching forecast from weather.gov API')
         forecasts_json = fc.forecast_from_api(**coordinates)
         forecasts = forecasts_json['properties']['periods']
+        logger.info('Caching forecast results to Redis')
         redis_conn.cache_forecasts(city, state, forecasts)
         forecast = redis_conn.lookup(key)
     else:
+        logger.info('Forecast found')
         thorcast_conn.increment(city, state)
     return forecast
 
