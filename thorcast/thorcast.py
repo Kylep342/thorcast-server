@@ -23,7 +23,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
     city, state = fmts.sanitize_location(city, state)
     key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
 
-    logger.info(f'Checing Redis for forecast with key {key}')
+    logger.info(f'Checking Redis for forecast with key {key}')
     redis_retries = 5
     while redis_retries:
         try:
@@ -57,12 +57,12 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
         if not coordinates:
             logger.info('Coordinates not found')
             logger.info('Fetching coordinates from Google maps API')
-            coordinates = geocode.geocode(city, state)
+            coordinates = geocode.fetch(city, state)
             logger.info('Coordinates fetched')
             logger.info(f'Saving coordinates {coordinates} to the database')
             thorcast_conn.register(city, state, **coordinates)
         logger.info('Fetching forecast from weather.gov API')
-        forecasts_json = fc.forecast_from_api(**coordinates)
+        forecasts_json = fc.fetch(**coordinates)
         forecasts = forecasts_json['properties']['periods']
         logger.info('Caching forecast results to Redis')
         redis_conn.cache_forecasts(city, state, forecasts)

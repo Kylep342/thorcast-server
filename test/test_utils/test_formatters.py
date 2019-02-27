@@ -8,7 +8,7 @@ def test_sanitize_city_underscore():
 
 
 def test_sanitize_city_html_escape():
-    city = 'Fort%20lauderdale'
+    city = 'Fort+lauderdale'
     assert fmts._sanitize_city(city) == 'Fort Lauderdale'
 
 

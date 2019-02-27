@@ -65,7 +65,7 @@ def home():
 
 @app.route('/api/city=<city>&state=<state>', defaults={'period': 'today'})
 @app.route('/api/city=<city>&state=<state>&period=<period>')
-def lookup_forecast(city, state, period):
+def lookup(city, state, period):
     forecast_json = thorcast.lookup(
         city,
         state,

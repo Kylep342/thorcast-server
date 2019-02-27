@@ -3,7 +3,7 @@ import os
 import requests
 
 
-def geocode(city, state):
+def fetch(city, state):
     """
     Function to retrieve coordinates for a city and state
 

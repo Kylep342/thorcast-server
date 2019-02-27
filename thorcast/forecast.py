@@ -1,7 +1,7 @@
 import requests
 
 
-def forecast_from_api(lat, lng):
+def fetch(lat, lng):
     """
     Function to get a forecast from api.weather.gov
 
