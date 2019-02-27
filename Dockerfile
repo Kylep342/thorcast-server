@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 EXPOSE 5000
 
 # run thorcast
-CMD ["python",  "server.py"]
+ENTRYPOINT ["python",  "server.py"]
