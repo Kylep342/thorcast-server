@@ -16,7 +16,7 @@ def _sanitize_state(state):
     Returns:
         state   [string]:   2 char, captialized state postal code
     """
-    state = re.sub('\+', ' ', state)
+    state = re.sub(r'\+', ' ', state)
     states = {
         'alabama': 'AL', 'al': 'AL',
         'alaska': 'AK', 'ak': 'AK',
@@ -86,7 +86,7 @@ def _sanitize_city(city):
     Returns:
         city    [string]:   Formatted name of city
     """
-    return ' '.join([word.capitalize() for word in re.sub('\+', ' ', city).split()])
+    return ' '.join([word.capitalize() for word in re.sub(r'\+', ' ', city).split()])
 
 
 def sanitize_location(city, state):
@@ -113,5 +113,5 @@ def sanitize_period(period):
         tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
         prefix = cal.day_of_week(tomorrow)
     else:
-        prefix = re.sub('( |_)night', '', period.lower())
+        prefix = re.sub(r'\+night', '', period.lower())
     return f'{prefix + suffix}'
