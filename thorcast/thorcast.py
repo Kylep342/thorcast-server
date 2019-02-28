@@ -69,6 +69,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
         forecast = redis_conn.lookup(key)
     else:
         logger.info('Forecast found')
+        logger.debug(f'Forecast is: {forecast}')
         thorcast_conn.increment(city, state)
     return forecast
 

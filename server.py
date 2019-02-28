@@ -44,13 +44,15 @@ weather_cache = wc.WeatherCache(
     REDIS_PASSWORD
 )
 
+
+LOG_LEVEL = int(os.getenv('PYTHON_LOG_LEVEL'))
 root = logging.getLogger(__name__)
 
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
-root.setLevel(logging.INFO)
+root.setLevel(LOG_LEVEL)
 
 
 
