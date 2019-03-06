@@ -1,6 +1,7 @@
 # Exclude Python cache files from image
 **/__pycache__
 **/*.pyc
+.pytest_cache/**
 #test/**
 
 # No need to hold example files for env configuration in image
