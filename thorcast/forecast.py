@@ -1,28 +1,29 @@
 import requests
 
 
-def clean_forecast(forecast):
-    return forecast.replace('. ', '.\n')
+def fetch(lat, lng):
+    """
+    Function to get a forecast from api.weather.gov
 
-
-def get_forecast(lat, lng):
+    Arguments:
+        lat [float]:    Latitude of city & state forecasting
+        lng [float]:    Longitude of city & state forecasting
+    
+    Returns:
+        forecast    [dict]: Object containing api.weather.gov response
+    """
     try:
         points_resp = requests.get(f'https://api.weather.gov/points/{lat},{lng}')
         points_resp.raise_for_status()
         office = points_resp.json()
-
-        city = office['properties']['relativeLocation']['properties']['city']
-        state = office['properties']['relativeLocation']['properties']['state']
 
         forecast_endpt = office['properties']['forecast']
 
         forecast_resp = requests.get(forecast_endpt)
         forecast_resp.raise_for_status()
         forecast = forecast_resp.json()
-
-        forecast_p0 = forecast['properties']['periods'][0]
     except Exception as e:
         raise e
     else:
-        return f'{forecast_p0["name"]}\'s forecast for {city}, {state}:\n{clean_forecast(forecast_p0["detailedForecast"])}'
+        return forecast
 
