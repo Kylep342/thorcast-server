@@ -17,9 +17,6 @@ def fetch(lat, lng):
         points_resp.raise_for_status()
         office = points_resp.json()
 
-        #city = office['properties']['relativeLocation']['properties']['city']
-        #state = office['properties']['relativeLocation']['properties']['state']
-
         forecast_endpt = office['properties']['forecast']
 
         forecast_resp = requests.get(forecast_endpt)
