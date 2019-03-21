@@ -74,7 +74,7 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
     return forecast
 
 
-def deliver(city, state, period, forecast_json, logger):
+def prepare(city, state, period, forecast_json, logger):
     period = period.replace('+', ' ').capitalize()
     city, state = fmts.sanitize_location(city, state)
     forecast = forecast_json['detailedForecast'].replace('. ', '.\n')
