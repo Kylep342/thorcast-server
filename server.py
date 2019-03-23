@@ -11,11 +11,12 @@ import logging
 import os
 import sys
 
-from flask import Flask
+from flask import Flask, jsonify
 
 import thorcast.thorcast as thorcast
 import thorcast.geocodex as gx
 import thorcast.weather_cache as wc
+from utils.errors import ClientError, ServerError
 
 
 GC_USERNAME = os.getenv('THORCAST_DB_USERNAME')
@@ -60,6 +61,20 @@ root.setLevel(LOG_LEVEL)
 app = Flask(__name__)
 
 
+@app.errorhandler(ClientError)
+def handle_client_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
+@app.errorhandler(ServerError)
+def handle_server_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
 @app.route('/')
 def home():
     return('<html><body><h1>Welcome to Thorcast!</h1></body></html>')
@@ -68,21 +83,30 @@ def home():
 @app.route('/api/city=<city>&state=<state>', defaults={'period': 'today'})
 @app.route('/api/city=<city>&state=<state>&period=<period>')
 def lookup(city, state, period):
-    forecast_json = thorcast.lookup(
-        city,
-        state,
-        period,
-        geocodex,
-        weather_cache,
-        root
-    )
-    data = thorcast.deliver(city, state, period, forecast_json, root)
-    response = app.response_class(
-        response=json.dumps(data),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+    try:
+        forecast_json = thorcast.lookup(
+            city,
+            state,
+            period,
+            geocodex,
+            weather_cache,
+            root
+        )
+        data = thorcast.prepare(city, state, period, forecast_json, root)
+        response = app.response_class(
+            response=json.dumps(data),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception as e:
+        payload = {
+            'City': city,
+            'State': state,
+            'Info': 'Invalid location.'
+        }
+        raise ClientError('Resource not found.', status_code=404, payload=payload)
+
 
 
 if __name__ == '__main__':
