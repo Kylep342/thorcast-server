@@ -56,8 +56,6 @@ root.addHandler(handler)
 root.setLevel(LOG_LEVEL)
 
 
-
-
 app = Flask(__name__)
 
 
@@ -80,6 +78,26 @@ def home():
     return('<html><body><h1>Welcome to Thorcast!</h1></body></html>')
 
 
+@app.route('/api/random')
+def random_fc():
+    try:
+        city, state, period, forecast_json = thorcast.rand_fc(
+            geocodex,
+            weather_cache,
+            root
+        )
+        data = thorcast.prepare(city, state, period, forecast_json, root)
+        response = app.response_class(
+            response=json.dumps(data),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception:
+        raise ServerError('Thorcast encountered an issue.', status_code=500, payload=None)
+
+
+
 @app.route('/api/city=<city>&state=<state>', defaults={'period': 'today'})
 @app.route('/api/city=<city>&state=<state>&period=<period>')
 def lookup(city, state, period):
@@ -99,7 +117,7 @@ def lookup(city, state, period):
             mimetype='application/json'
         )
         return response
-    except Exception as e:
+    except Exception:
         payload = {
             'City': city,
             'State': state,

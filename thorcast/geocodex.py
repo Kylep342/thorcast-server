@@ -99,6 +99,24 @@ class Geocodex(object):
             return coordinates
         else:
             return False
+    
+
+    def rand_loc(self):
+        results = self.conn.execute("""
+            SELECT
+                city,
+                state,
+                lat,
+                lng
+            FROM geocodex
+            ORDER BY RANDOM()
+            LIMIT 1
+        ;""")
+        row = results.fetchone()
+        city, state, lat, lng = row
+        coordinates = {'lat': lat, 'lng': lng}
+        return city, state, coordinates
+
 
 
     def increment(self, city, state):
