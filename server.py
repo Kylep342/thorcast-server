@@ -16,7 +16,7 @@ from flask import Flask, jsonify
 import thorcast.thorcast as thorcast
 import thorcast.geocodex as gx
 import thorcast.weather_cache as wc
-from utils.errors import ClientError, ServerError
+import utils.errors as apierr 
 
 
 GC_USERNAME = os.getenv('THORCAST_DB_USERNAME')
@@ -59,15 +59,22 @@ root.setLevel(LOG_LEVEL)
 app = Flask(__name__)
 
 
-@app.errorhandler(ClientError)
+@app.errorhandler(apierr.ClientError)
 def handle_client_error(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
 
 
-@app.errorhandler(ServerError)
+@app.errorhandler(apierr.ServerError)
 def handle_server_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
+@app.errorhandler(apierr.NotFoundError)
+def handle_not_found_error(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
@@ -78,7 +85,7 @@ def home():
     return('<html><body><h1>Welcome to Thorcast!</h1></body></html>')
 
 
-@app.route('/api/random')
+@app.route('/api/forecast/random')
 def random_fc():
     try:
         city, state, period, forecast_json = thorcast.rand_fc(
@@ -94,12 +101,16 @@ def random_fc():
         )
         return response
     except Exception:
-        raise ServerError('Thorcast encountered an issue.', status_code=500, payload=None)
+        raise apierr.ServerError(
+            'Thorcast encountered an issue.',
+            status_code=500,
+            payload=None
+        )
 
 
 
-@app.route('/api/city=<city>&state=<state>', defaults={'period': 'today'})
-@app.route('/api/city=<city>&state=<state>&period=<period>')
+@app.route('/api/forecast/city=<city>&state=<state>', defaults={'period': 'today'})
+@app.route('/api/forecast/city=<city>&state=<state>&period=<period>')
 def lookup(city, state, period):
     try:
         forecast_json = thorcast.lookup(
@@ -119,11 +130,16 @@ def lookup(city, state, period):
         return response
     except Exception:
         payload = {
-            'City': city,
-            'State': state,
-            'Info': 'Invalid location.'
+            'city': city,
+            'state': state,
+            'period': period,
+            'info': 'Invalid location/period.'
         }
-        raise ClientError('Resource not found.', status_code=404, payload=payload)
+        raise apierr.NotFoundError(
+            f'Forecast not found',
+            status_code=404,
+            payload=payload
+        )
 
 
 
