@@ -22,6 +22,12 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
         period:         [string]:       The day/time to forecast
         thorcast_conn:  [sqlalchemy.engine.base.Connection]: DB conn
         redis_conn:     [redis.Redis]:  Redis connection object
+        logger:         [Logger]:       Python stdlib logger
+
+    Returns:
+        forecast        [dict]:         A small JSON from
+                                        api.weather.gov containing
+                                        forecast info
     """
     period = fmts.sanitize_period(period)
     city, state = fmts.sanitize_location(city, state)
@@ -79,6 +85,19 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
 
 
 def rand_fc(thorcast_conn, redis_conn, logger):
+    """
+    Provides a random forecast for a random location and day/time
+
+    Arguments:
+        thorcast_conn:  [sqlalchemy.engine.base.Connection]: DB conn
+        redis_conn:     [redis.Redis]:  Redis connection object
+        logger:         [Logger]:       Python stdlib logger
+
+    Returns:
+        forecast        [dict]:         A small JSON from
+                                        api.weather.gov containing
+                                        forecast info
+    """
     logger.info('Looking up random forecast.')
     logger.info('Choosing random period to forcast.')
     day = cal.day_of_week(datetime.date.today() + datetime.timedelta(days=random.randint(0, 6)))
@@ -134,8 +153,23 @@ def rand_fc(thorcast_conn, redis_conn, logger):
 
 
 def prepare(city, state, period, forecast_json, logger):
+    """
+    Function to extract detailedForecast from forecast object
+
+    Arguments:
+        city:           [string]:       The city name to forcast
+        state:          [string]:       The state hosting the city
+        period:         [string]:       The day/time to forecast
+        forecast_json   [dict]:         Object containing forecast info
+                                        from api.weather.gov
+        logger          [Logger]:       Python stdlib logger
+    
+    Returns:
+        response        [JSON]:         API response containing the
+                                        forecast for the given city,
+                                        state, and period
+    """
     period = re.sub('[+_]', ' ', period).capitalize()
-    #period.replace('+', ' ').capitalize()
     city, state = fmts.sanitize_location(city, state)
     forecast = forecast_json['detailedForecast'].replace('. ', '.\n')
     return {'forecast': f"{period}'s forecast for {city}, {state}" + '\n' + forecast}
