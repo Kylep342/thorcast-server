@@ -32,7 +32,8 @@ class WeatherCache(object):
             value = False
         except Exception as e:
             raise e
-        return value
+        else:
+            return value
     
     def cache_forecasts(self, city, state, forecasts):
         for forecast in forecasts:

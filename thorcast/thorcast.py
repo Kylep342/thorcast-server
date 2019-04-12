@@ -29,9 +29,12 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
                                         api.weather.gov containing
                                         forecast info
     """
-    period = fmts.sanitize_period(period)
-    city, state = fmts.sanitize_location(city, state)
-    key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
+    try:
+        period = fmts.sanitize_period(period)
+        city, state = fmts.sanitize_location(city, state)
+        key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
+    except Exception as e:
+        raise e
 
     logger.info(f'Checking Redis for forecast with key {key}')
     redis_retries = 5
@@ -57,7 +60,8 @@ def lookup(city, state, period, thorcast_conn, redis_conn, logger):
                 coordinates = thorcast_conn.locate(city, state)
                 break
             except sqlalchemy.exc.OperationalError as e:
-                logger.info('Disconnected from Postgres. Attempting to reconnect...')
+                logger.info(
+                    'Disconnected from Postgres. Attempting to reconnect...')
                 logger.info(f'Attempt {6 - pg_retries}')
                 if not pg_retries:
                     logger.error('Connection to Postgres lost')
@@ -100,7 +104,8 @@ def rand_fc(thorcast_conn, redis_conn, logger):
     """
     logger.info('Looking up random forecast.')
     logger.info('Choosing random period to forcast.')
-    day = cal.day_of_week(datetime.date.today() + datetime.timedelta(days=random.randint(0, 6)))
+    day = cal.day_of_week(datetime.date.today() +
+                          datetime.timedelta(days=random.randint(0, 6)))
     time_of_day = random.choice(['', 'night'])
     period = fmts.sanitize_period('+'.join(filter(None, (day, time_of_day))))
 
@@ -111,7 +116,8 @@ def rand_fc(thorcast_conn, redis_conn, logger):
             city, state, coordinates = thorcast_conn.rand_loc()
             break
         except sqlalchemy.exc.OperationalError as e:
-            logger.info('Disconnected from Postgres. Attempting to reconnect...')
+            logger.info(
+                'Disconnected from Postgres. Attempting to reconnect...')
             logger.info(f'Attempt {6 - pg_retries}')
             if not pg_retries:
                 logger.error('Connection to Postgres lost')
@@ -121,7 +127,7 @@ def rand_fc(thorcast_conn, redis_conn, logger):
 
     city, state = fmts.sanitize_location(city, state)
     key = f'{city}_{state}_{period}'.lower().replace(' ', '_')
-    
+
     logger.info(f'Checking Redis for forecast with key {key}')
     redis_retries = 5
     while redis_retries:
@@ -148,7 +154,7 @@ def rand_fc(thorcast_conn, redis_conn, logger):
     else:
         logger.info('Forecast found')
         logger.debug(f'Forecast is: {forecast}')
-        thorcast_conn.increment(city, state)
+    thorcast_conn.increment(city, state)
     return city, state, period, forecast
 
 
@@ -163,7 +169,7 @@ def prepare(city, state, period, forecast_json, logger):
         forecast_json   [dict]:         Object containing forecast info
                                         from api.weather.gov
         logger          [Logger]:       Python stdlib logger
-    
+
     Returns:
         response        [JSON]:         API response containing the
                                         forecast for the given city,
