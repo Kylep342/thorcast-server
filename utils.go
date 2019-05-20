@@ -3,12 +3,16 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 )
 
+var timesOfDay = []string{"", "_night"}
 var separatorRE = regexp.MustCompile(`[_+ ]+`)
-var periodRE = regexp.MustCompile(`(?i)(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?: )?(night)?`)
+var periodRE = regexp.MustCompile(`(?i)(sunday|monday|tuesday|wednesday|thursday|friday|saturday)( night)?`)
+var relDateRE = regexp.MustCompile(`(?i)(today|tonight|tomorrow)( night)?`)
 var stateCodes = map[string]string{
 	"alabama": "AL", "al": "AL",
 	"alaska": "AK", "ak": "AK",
@@ -80,6 +84,10 @@ type Period struct {
 	isDaytime bool
 }
 
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
+}
+
 func SanitizeInputs(city string, state string, period string) (City, State, Period, error) {
 	cleanState, err := sanitizeState(state)
 	if err != nil {
@@ -108,7 +116,20 @@ func sanitizeState(state string) (State, error) {
 }
 
 func sanitizePeriod(period string) (Period, error) {
-	m := periodRE.FindStringSubmatch(separatorRE.ReplaceAllString(period, " "))
+	var cleanPeriod string
+	switch {
+	case strings.Contains(strings.ToLower(period), "today"):
+		cleanPeriod = time.Now().Weekday().String()
+	case strings.Contains(strings.ToLower(period), "tonight"):
+		cleanPeriod = fmt.Sprintf("%s night", time.Now().Weekday().String())
+	case strings.Contains(strings.ToLower(period), "tomorrow"):
+		cleanPeriod = time.Now().AddDate(0,0,1).Weekday().String()
+	case strings.Contains(strings.ToLower(period), "tomorrow night"):
+		cleanPeriod = fmt.Sprintf("%s night", time.Now().AddDate(0,0,1).Weekday().String())
+	default:
+		cleanPeriod = period
+	}
+	m := periodRE.FindStringSubmatch(separatorRE.ReplaceAllString(cleanPeriod, " "))
 	if m != nil && m[2] == "" {
 		return Period{
 			asKey: strings.ToLower(m[1]),
@@ -130,4 +151,11 @@ func sanitizePeriod(period string) (Period, error) {
 	} else {
 		return Period{}, errors.New("Invalid period.")
 	}
+}
+
+func randomPeriod() Period {
+	dayOfWeek := time.Now().AddDate(0, 0, rand.Intn(7)).Weekday().String()
+	timeOfDay := timesOfDay[rand.Intn(2)]
+	p, _ := sanitizePeriod(fmt.Sprintf("%s%s", dayOfWeek, timeOfDay))
+	return p
 }
