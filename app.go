@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
+
+	"github.com/go-redis/redis"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -14,85 +16,116 @@ import (
 )
 
 type config struct {
-	username string
-	password string
-	host     string
-	port     string
-	dbName   string
+	sqlUsername 	string
+	sqlPassword 	string
+	sqlHost     	string
+	sqlPort     	string
+	sqlDbName   	string
+	redisPassword	string
+	redisHost		string
+	redisPort		string
+	redisDb			int
 }
 
 func (conf *config) configure() {
-	conf.username = os.Getenv("THORCAST_DB_USERNAME")
-	conf.password = os.Getenv("THORCAST_DB_PASSWORD")
-	conf.host = os.Getenv("THORCAST_DB_HOST")
-	conf.port = os.Getenv("THORCAST_DB_PORT")
-	conf.dbName = os.Getenv("THORCAST_DB_NAME")
+	conf.sqlUsername = os.Getenv("THORCAST_DB_USERNAME")
+	conf.sqlPassword = os.Getenv("THORCAST_DB_PASSWORD")
+	conf.sqlHost = os.Getenv("THORCAST_DB_HOST")
+	conf.sqlPort = os.Getenv("THORCAST_DB_PORT")
+	conf.sqlDbName = os.Getenv("THORCAST_DB_NAME")
+	conf.redisPassword = os.Getenv("REDIS_PASSWORD")
+	conf.redisHost = os.Getenv("REDIS_HOST")
+	conf.redisPort = os.Getenv("REDIS_PORT")
+	conf.redisDb, _ = strconv.Atoi(os.Getenv("REDIS_DB"))
 }
 
-var dbConf = config{}
+var conf = config{}
 
 type App struct {
 	Router *mux.Router
 	Logger http.Handler
 	DB     *sql.DB
+	Redis  *redis.Client
 }
 
-func (a *App) LookupFC(w http.ResponseWriter, r *http.Request) {
+func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	city := strings.ReplaceAll(vars["city"], "+", " ")
-	state := strings.ReplaceAll(vars["state"], "+", " ")
-	period := strings.ReplaceAll(vars["period"], "+", " ")
 
-	lCity, lState, lPeriod, err := SanitizeInputs(city, state, period)
+	city, state, period, err := SanitizeInputs(
+		vars["city"],
+		vars["state"],
+		vars["period"],
+	)
+	l := Location{City: city.asName, State: state.asName}
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 	} else {
-		l := Location{City: lCity.asName, State: lState.asName}
-		row := a.DB.QueryRow("SELECT lat, lng FROM geocodex WHERE LOWER(city) = LOWER($1) AND state = $2;", l.City, l.State)
-		if err := row.Scan(&l.Lat, &l.Lng); err != nil {
-			switch err {
-			case sql.ErrNoRows:
-				l.SetCoords(FetchCoords(lCity.asURL, lState.asURL))
-				if err = a.RegisterLocation(l); err != nil {
-					a.IncrementLocation(l)
+		var forecast string
+		forecast, err := a.LookupForecast(city, state, period)
+		if err == redis.Nil {
+			row := a.DB.QueryRow(
+			"SELECT lat, lng FROM geocodex WHERE LOWER(city) = LOWER($1) AND state = $2;",
+			l.City,
+			l.State)
+			if err := row.Scan(&l.Lat, &l.Lng); err != nil {
+				switch err {
+				case sql.ErrNoRows:
+					l.SetCoords(FetchCoords(city.asURL, state.asURL))
+					if err = a.RegisterLocation(l); err != nil {
+						a.IncrementLocation(l)
+					}
+				default:
+					respondWithError(w, http.StatusBadRequest, err.Error())
 				}
-			default:
-				respondWithError(w, http.StatusBadRequest, err.Error())
+			} else {
+				a.IncrementLocation(l)
 			}
+			forecastURL := FetchForecastURL(l)
+			forecasts := FetchForecasts(forecastURL)
+			forecast = a.CacheForecasts(city, state, period, forecasts)
+		} else if err != nil {
+			respondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
 			a.IncrementLocation(l)
 		}
-		forecastURL := FetchForecastURL(l)
-		forecasts := FetchForecasts(forecastURL)
-		forecast := SelectForecast(forecasts, lPeriod)
-		resp := map[string]string{"detailedForecast": forecast}
+		resp := map[string]string{
+			"detailedForecast": forecast,
+			"city": city.asName,
+			"state": state.asName,
+			"period": period.asName}
 		respondWithJSON(w, http.StatusOK, resp)
 	}
 }
 
 func (a *App) InitializeRoutes() {
-	a.Router.HandleFunc("/api/forecast/city={city}&state={state}&period={period}", a.LookupFC).Methods("GET")
+	a.Router.HandleFunc("/api/forecast/city={city}&state={state}&period={period}", a.Forecast).Methods("GET")
 }
 
 func (a *App) Initialize() {
 	var err error
-	dbConf.configure()
-	dataSource := fmt.Sprintf(
+	conf.configure()
+	sqlDataSource := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		dbConf.username,
-		dbConf.password,
-		dbConf.host,
-		dbConf.port,
-		dbConf.dbName)
-	a.DB, err = sql.Open("postgres", dataSource)
+		conf.sqlUsername,
+		conf.sqlPassword,
+		conf.sqlHost,
+		conf.sqlPort,
+		conf.sqlDbName)
+	a.DB, err = sql.Open("postgres", sqlDataSource)
 	if err != nil {
 		log.Fatal(err)
 	}
+	a.Redis = redis.NewClient(&redis.Options{
+		Addr:		fmt.Sprintf("%s:%s", conf.redisHost, conf.redisPort),
+		Password:	conf.redisPassword,
+		DB:			conf.redisDb,
+	})
 	a.Router = mux.NewRouter()
 	a.Logger = handlers.CombinedLoggingHandler(os.Stdout, a.Router)
 	a.InitializeRoutes()
 }
 
 func (a *App) Run() {
-	log.Fatal(http.ListenAndServe(":8000", a.Logger))
+	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
+	log.Fatal(http.ListenAndServe(port , a.Logger))
 }

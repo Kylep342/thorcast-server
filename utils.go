@@ -109,7 +109,7 @@ func sanitizeState(state string) (State, error) {
 
 func sanitizePeriod(period string) (Period, error) {
 	m := periodRE.FindStringSubmatch(separatorRE.ReplaceAllString(period, " "))
-	if m != nil && m[2] != "" {
+	if m != nil && m[2] == "" {
 		return Period{
 			asKey: strings.ToLower(m[1]),
 			asName: strings.Title(m[1]),
