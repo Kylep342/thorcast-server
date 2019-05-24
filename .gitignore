@@ -1,7 +1,2 @@
 # Ignoring config files
-**/*.yml
 **/*.list
-
-# Ignoring pycache
-**/__pycache__/**
-.pytest_cache/**
