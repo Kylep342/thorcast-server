@@ -15,7 +15,7 @@ FROM build_base AS server_builder
 
 COPY . .
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o thorserver
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o thorserver
 
 #
 FROM alpine

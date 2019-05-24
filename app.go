@@ -48,13 +48,19 @@ type App struct {
 	Redis  *redis.Client
 }
 
+
 func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+
+	checkPeriod, ok := vars["period"]
+	if !ok {
+		checkPeriod = "today"
+	}
 
 	city, state, period, err := SanitizeInputs(
 		vars["city"],
 		vars["state"],
-		vars["period"],
+		checkPeriod,
 	)
 	l := Location{City: city.asName, State: state.asName}
 	if err != nil {
@@ -64,7 +70,13 @@ func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 		forecast, err := a.LookupForecast(city, state, period)
 		if err == redis.Nil {
 			row := a.DB.QueryRow(
-			"SELECT lat, lng FROM geocodex WHERE LOWER(city) = LOWER($1) AND state = $2;",
+			`SELECT
+				lat,
+				lng
+			FROM geocodex
+			WHERE LOWER(city) = LOWER($1)
+			AND state = $2
+			;`,
 			l.City,
 			l.State)
 			if err := row.Scan(&l.Lat, &l.Lng); err != nil {
@@ -89,7 +101,7 @@ func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 			a.IncrementLocation(l)
 		}
 		resp := map[string]string{
-			"detailedForecast": forecast,
+			"forecast": forecast,
 			"city": city.asName,
 			"state": state.asName,
 			"period": period.asName}
@@ -97,8 +109,46 @@ func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+func (a *App) Random(w http.ResponseWriter, r *http.Request) {
+	var l Location
+	var forecast string
+	row := a.DB.QueryRow(
+		`SELECT
+			city,
+			state,
+			lat,
+			lng
+		FROM geocodex
+		ORDER BY random()
+		LIMIT 1;`)
+	if err := row.Scan(&l.City, &l.State, &l.Lat, &l.Lng); err != nil {
+		log.Fatal(err)
+	}
+
+	period := randomPeriod()
+	city := sanitizeCity(l.City)
+	state, _ := sanitizeState(l.State)
+	forecast, err := a.LookupForecast(city, state, period)
+	if err == redis.Nil {
+		forecastURL := FetchForecastURL(l)
+		forecasts := FetchForecasts(forecastURL)
+		forecast = a.CacheForecasts(city, state, period, forecasts)
+	}
+	a.IncrementLocation(l)
+	resp := map[string]string{
+		"forecast": forecast,
+		"city": city.asName,
+		"state": state.asName,
+		"period": period.asName}
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+
 func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/api/forecast/city={city}&state={state}&period={period}", a.Forecast).Methods("GET")
+	a.Router.HandleFunc("/api/forecast/city={city}&state={state}", a.Forecast).Methods("GET")
+	a.Router.HandleFunc("/api/forecast/random", a.Random).Methods("GET")
 }
 
 func (a *App) Initialize() {
