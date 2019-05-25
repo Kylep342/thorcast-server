@@ -5,22 +5,23 @@
 Thorcast is a Discord/Slack chatbot that provides weather forecasts on demand
 
 ## Getting started
+
 - Clone the repo at https://github.com/Kylep342/thorcast-server.git
-- Run tests: `cd tests; pytest`
 - Set up your own 'env.list' file in the structure demonstrated in env.list.example
 - Run `docker build -t kylep342/thorcast-server .` to set up the Docker Image
 
 ## Usage
-`docker run --env-file env.list -p 5000:5000 kylep342/thorcast-server` will start the server at 0.0.0.0:5000
+
+`docker run --env-file env.list -p 8000:8000 kylep342/thorcast-server` will start the server at 0.0.0.0:5000
 
 Example:
 
 ```Bash
-curl http://0.0.0.0:5000/api/city=Chicago&state=IL
+curl http://0.0.0.0:8000/api/forecast/city=Chicago&state=IL&period=Tuesday+night
 
-{"forecast": "Today's forecast for Chicago, IL\nMostly sunny, with a high near 28.\nWind chill values as low as -2.\nWest southwest wind 10 to 20 mph, with gusts as high as 30 mph."}
+{"city":"Chicago","forecast":"Showers and thunderstorms likely. Mostly cloudy, with a low around 59.","period":"Tuesday night","state":"IL"}
 ```
 
 ## Upcoming features
-- Move to Rust/Go
 
+- Add tests in Go
