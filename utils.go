@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-var timesOfDay = []string{"", "_night"}
+var timesOfDay = []string{"", "[_ ]night"}
 var separatorRE = regexp.MustCompile(`[_+ ]+`)
-var periodRE = regexp.MustCompile(`(?i)(sunday|monday|tuesday|wednesday|thursday|friday|saturday)( night)?`)
-var relDateRE = regexp.MustCompile(`(?i)(today|tonight|tomorrow)( night)?`)
+var periodRE = regexp.MustCompile(`(?i)(sunday|monday|tuesday|wednesday|thursday|friday|saturday) ?(night)?`)
+var relDateRE = regexp.MustCompile(`(?i)(today|tonight|tomorrow) ?(night)?`)
 var stateCodes = map[string]string{
 	"alabama": "AL", "al": "AL",
 	"alaska": "AK", "ak": "AK",
