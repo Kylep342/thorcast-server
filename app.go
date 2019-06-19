@@ -15,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// global config struct holding database connection info
 type config struct {
 	sqlUsername 	string
 	sqlPassword 	string
@@ -27,6 +28,7 @@ type config struct {
 	redisDb			int
 }
 
+// method to initialize config struct from environment variables
 func (conf *config) configure() {
 	conf.sqlUsername = os.Getenv("THORCAST_DB_USERNAME")
 	conf.sqlPassword = os.Getenv("THORCAST_DB_PASSWORD")
@@ -48,7 +50,8 @@ type App struct {
 	Redis  *redis.Client
 }
 
-
+// Forecast returns the detailed forecast for a given city, state, and period
+// if period is not specified in the HTTP request, it defaults to today
 func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -109,7 +112,9 @@ func (a *App) Forecast(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
+// Random provides a forecast for a random city, state, and period
+// city and state are determined by selecting a random location from the database
+// period is selected randomly within the next week
 func (a *App) Random(w http.ResponseWriter, r *http.Request) {
 	var l Location
 	var forecast string
@@ -144,13 +149,14 @@ func (a *App) Random(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
-
+// Initializes all endpoints for the api
 func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/api/forecast/city={city}&state={state}&period={period}", a.Forecast).Methods("GET")
 	a.Router.HandleFunc("/api/forecast/city={city}&state={state}", a.Forecast).Methods("GET")
 	a.Router.HandleFunc("/api/forecast/random", a.Random).Methods("GET")
 }
 
+// Initializes the application as a whole
 func (a *App) Initialize() {
 	var err error
 	conf.configure()
@@ -175,6 +181,7 @@ func (a *App) Initialize() {
 	a.InitializeRoutes()
 }
 
+// Starts teh app to listen on the port specitied by the env variable SERVER_PORT
 func (a *App) Run() {
 	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
 	log.Fatal(http.ListenAndServe(port , a.Logger))

@@ -8,6 +8,9 @@ import (
 	"os"
 )
 
+const gcAPI = "https://maps.googleapis.com/maps/api/geocode/json"
+
+// Struct holding data from the maps.google.com geocoding api
 type geocodeAPIResp struct {
 	Results []struct {
 		AddressComponents []struct {
@@ -39,14 +42,15 @@ type geocodeAPIResp struct {
 	Status string `json:"status"`
 }
 
+// Struct holding the lat, lng pair from a maps.google.com geocode api response
 type Coordinates struct {
 	Lat float64 `json:"lat"`
 	Lng float64 `json:"lng"`
 }
 
+// FetchCoords returns coordinates for a given address
 func FetchCoords(city, state string) Coordinates {
 	APIKey := os.Getenv("GOOGLE_MAPS_API_KEY")
-	gcAPI := "https://maps.googleapis.com/maps/api/geocode/json"
 	requestURL := fmt.Sprintf("%s?address=%s,%s&key=%s", gcAPI, city, state, APIKey)
 	resp, err := http.Get(requestURL)
 	if err != nil {

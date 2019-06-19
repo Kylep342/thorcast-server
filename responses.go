@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// respondWithJson function to respond with a JSON payload
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
 
@@ -13,10 +14,12 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	_, _ = w.Write(response)
 }
 
+// Wrapper function for responding on a successful request
 func respondWithMessage(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"message": message})
 }
 
+// Wrapper function for responding on an unsuccessful request
 func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
