@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+//
 func (a *App) RegisterLocation(l Location) error {
 	instertStmt := `
 	INSERT INTO geocodex (city, state, lat, lng, requests)

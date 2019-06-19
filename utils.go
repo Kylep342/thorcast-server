@@ -9,10 +9,22 @@ import (
 	"time"
 )
 
+// Slice containing all string representations of different times of day
+// empty string is day time, "_night" is night time
 var timesOfDay = []string{"", "[_ ]night"}
+
+// Regex to match any expected separator characters in a string within
+// a URL parameter
 var separatorRE = regexp.MustCompile(`[_+ ]+`)
+
+// Regex used to match accepted days of the week and times of day
 var periodRE = regexp.MustCompile(`(?i)(sunday|monday|tuesday|wednesday|thursday|friday|saturday) ?(night)?`)
+
+// Regex used to match relative days and times (e.g. today, tomorrow night, etc.)
 var relDateRE = regexp.MustCompile(`(?i)(today|tonight|tomorrow) ?(night)?`)
+
+// Map containing all accepted state names and abbreviations
+// Matches output capitalized 2 character postal codes
 var stateCodes = map[string]string{
 	"alabama": "AL", "al": "AL",
 	"alaska": "AK", "ak": "AK",
@@ -65,18 +77,28 @@ var stateCodes = map[string]string{
 	"wisconsin": "WI", "wi": "WI",
 	"wyoming": "WY", "wy": "WY"}
 
+// City contains a city name in several string representations
+// asURL: Case insensitive, separated by plus signs
+// asKey: Lowercase, separated by underscores
+// asName: Proper case, separated by spaces
 type City struct {
 	asURL  string
 	asKey  string
 	asName string
 }
 
+// State contains a state name in several string representations
+// asURL: Uppercase
+// asKey: Lowercase
+// asName: Uppercase
 type State struct {
 	asURL  string
 	asKey  string
 	asName string
 }
 
+// Period contains a time period in several string representations
+// as well as a boolean representing the state of daytime in the period
 type Period struct {
 	asKey     string
 	asName 	  string
@@ -88,6 +110,8 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
+// Wrapper function to validate all inputs
+// Returns City, State, Period, and nil error on success
 func SanitizeInputs(city string, state string, period string) (City, State, Period, error) {
 	cleanState, err := sanitizeState(state)
 	if err != nil {
@@ -101,12 +125,14 @@ func SanitizeInputs(city string, state string, period string) (City, State, Peri
 	return cleanCity, cleanState, cleanPeriod, nil
 }
 
+// sanitizeCity creates a City struct from a given city name string
 func sanitizeCity(city string) City {
 	return City{asURL: separatorRE.ReplaceAllString(city, "+"),
 		asKey:  strings.ToLower(separatorRE.ReplaceAllString(city, "_")),
 		asName: separatorRE.ReplaceAllString(city, " ")}
 }
 
+// sanitizeState creates a State struct from a given state name string
 func sanitizeState(state string) (State, error) {
 	key := strings.ToLower(separatorRE.ReplaceAllString(state, " "))
 	if cleanState, ok := stateCodes[key]; ok {
@@ -115,6 +141,7 @@ func sanitizeState(state string) (State, error) {
 	return State{}, errors.New("Invalid state name.")
 }
 
+// sanitizePeriod creates a Period struct from a given period name string
 func sanitizePeriod(period string) (Period, error) {
 	var cleanPeriod string
 	switch {
@@ -153,6 +180,8 @@ func sanitizePeriod(period string) (Period, error) {
 	}
 }
 
+// randomPeriod generates a random day of the week and time of day
+// and returns the corresponding Period struct
 func randomPeriod() Period {
 	dayOfWeek := time.Now().AddDate(0, 0, rand.Intn(7)).Weekday().String()
 	timeOfDay := timesOfDay[rand.Intn(2)]

@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// CacheForecasts stores the provided forecasts
+// for the given City, State, and Period
+// key format is c.asKey_s.asKey_p.asKey
 func (a *App) CacheForecasts(c City, s State, p Period, f Forecasts) string {
 	now := time.Now()
 	var detailedForecast string
@@ -38,6 +41,8 @@ func (a *App) CacheForecasts(c City, s State, p Period, f Forecasts) string {
 	return detailedForecast
 }
 
+// LookupForecast tries to retrieve the forecast from the cache
+// for the given City, State, and Period
 func (a *App) LookupForecast(c City, s State, p Period) (string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_%s",
