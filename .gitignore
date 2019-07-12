@@ -1,2 +1,4 @@
 # Ignoring config files
 **/*.list
+
+.vscode/**
