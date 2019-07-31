@@ -5,15 +5,19 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
-// CacheForecasts stores the provided forecasts
+const timeOutFmt string = "2019/07/24 1:00:00"
+
+// CacheDetailedForecasts stores the provided forecasts
 // for the given City, State, and Period
-// key format is c.asKey_s.asKey_p.asKey
-func (a *App) CacheForecasts(c City, s State, p Period, f Forecasts) string {
+// key format is city.asKey_state.asKey_period.asKey
+func (a *App) CacheDetailedForecasts(city City, state State, period Period, forecasts Forecasts) string {
 	now := time.Now()
 	var detailedForecast string
-	for _, forecast := range f.Properties.Periods {
+	for _, forecast := range forecasts.Properties.Periods {
 		dayOfWeek := forecast.StartTime.Weekday().String()
 		var timeOfDay string
 		if forecast.IsDaytime {
@@ -23,8 +27,8 @@ func (a *App) CacheForecasts(c City, s State, p Period, f Forecasts) string {
 		}
 		key := fmt.Sprintf(
 			"%s_%s_%s%s",
-			c.asKey,
-			s.asKey,
+			city.asKey,
+			state.asKey,
 			strings.ToLower(dayOfWeek),
 			timeOfDay)
 		err := a.Redis.Set(
@@ -34,25 +38,75 @@ func (a *App) CacheForecasts(c City, s State, p Period, f Forecasts) string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if dayOfWeek == p.dayOfWeek && forecast.IsDaytime == p.isDaytime {
+		if dayOfWeek == period.dayOfWeek && forecast.IsDaytime == period.isDaytime {
 			detailedForecast = forecast.DetailedForecast
 		}
 	}
 	return detailedForecast
 }
 
-// LookupForecast tries to retrieve the forecast from the cache
+// LookupDetailedForecast tries to retrieve the forecast from the cache
 // for the given City, State, and Period
-func (a *App) LookupForecast(c City, s State, p Period) (string, error) {
+func (a *App) LookupDetailedForecast(city City, state State, period Period) (string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_%s",
-		c.asKey,
-		s.asKey,
-		p.asKey)
+		city.asKey,
+		state.asKey,
+		period.asKey)
 	val, err := a.Redis.Get(key).Result()
 	if err != nil {
 		return "", err
 	}
 	return val, nil
 	
+}
+
+func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecasts Forecasts) []string {
+	key := fmt.Sprintf(
+		"%s_%s_hourly",
+		city.asKey,
+		state.asKey)
+	now := time.Now()
+	expiry := now.Add(1*time.Hour).Truncate(1*time.Hour)
+	var hourlyForecasts []string
+	for _, fc := range forecasts.Properties.Periods {
+		forecast := fmt.Sprintf(
+			"%s %d\u00b0 %s, Wind: %s %s, Forecast: %s",
+			fc.StartTime.Format(time.RFC3339),
+			fc.Temperature,
+			fc.TemperatureUnit,
+			fc.WindSpeed,
+			fc.WindDirection,
+			fc.ShortForecast)
+		hourlyForecasts = append(hourlyForecasts, forecast)
+	}
+	err := a.Redis.RPush(key, hourlyForecasts).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = a.Redis.ExpireAt(key, expiry).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return hourlyForecasts[:hours]
+}
+
+func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]string, error) {
+	key := fmt.Sprintf(
+		"%s_%s_hourly",
+		city.asKey,
+		state.asKey)
+	exists, err := a.Redis.Exists(key).Result()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if exists == 1 {
+		val, err := a.Redis.LRange(key, 0, hours-1).Result()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return val, nil
+	} else {
+		return []string{}, redis.Nil
+	}	
 }

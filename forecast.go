@@ -76,8 +76,8 @@ type Forecasts struct {
 		Updated           time.Time `json:"updated"`
 		Units             string    `json:"units"`
 		ForecastGenerator string    `json:"forecastGenerator"`
-		GeneratedAt       time.Time `json:"generatedAt"`
-		UpdateTime        time.Time `json:"updateTime"`
+		GeneratedAt       string 	`json:"generatedAt"`
+		UpdateTime        string 	`json:"updateTime"`
 		ValidTimes        string 	`json:"validTimes"`
 		Elevation         struct {
 			Value    float64 `json:"value"`
@@ -101,20 +101,32 @@ type Forecasts struct {
 	} `json:"properties"`
 }
 
-// Function to extract the URL for a forecast for the specified (Lat, Lng) pair
-func FetchForecastURL(l Location) string {
+// Experimental
+func FetchPoints(l Location) Points {
 	requestURL := fmt.Sprintf("%s/%f,%f", weatherGovAPI, l.Lat, l.Lng)
 	resp, err := http.Get(requestURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var point Points
+	var p Points
 	defer resp.Body.Close()
-	err = json.NewDecoder(resp.Body).Decode(&point)
+	err = json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return p
+}
+
+// Function to extract the URL for a forecast for the specified (Lat, Lng) pair
+func FetchDetailedForecastURL(l Location) string {
+	point := FetchPoints(l)
 	return point.Properties.Forecast
+}
+
+// Function to extract the URL for an hourly forecast for the specified (Lat, Lng) pair
+func FetchHourlyForecastURL(l Location) string {
+	point := FetchPoints(l)	
+	return point.Properties.ForecastHourly
 }
 
 // Funciton to extract all periods of forecasts for a reuqested city and state
@@ -133,11 +145,11 @@ func FetchForecasts(forecastsURL string) Forecasts {
 }
 
 // SelectForecast extracts the desired forecast period from the response of FetchForecasts
-func SelectForecast(forecasts Forecasts, period Period) string {
-	for _, fc := range forecasts.Properties.Periods {
-		if (fc.StartTime.Weekday().String() == period.dayOfWeek) && (fc.IsDaytime == period.isDaytime) {
-			return fc.DetailedForecast
-		}
-	}
-	return ""
-}
+// func SelectForecast(forecasts Forecasts, period Period) string {
+// 	for _, fc := range forecasts.Properties.Periods {
+// 		if (fc.StartTime.Weekday().String() == period.dayOfWeek) && (fc.IsDaytime == period.isDaytime) {
+// 			return fc.DetailedForecast
+// 		}
+// 	}
+// 	return ""
+// }
