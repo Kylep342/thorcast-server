@@ -101,7 +101,6 @@ type Forecasts struct {
 	} `json:"properties"`
 }
 
-
 // Experimental
 func FetchPoints(l Location) Points {
 	requestURL := fmt.Sprintf("%s/%f,%f", weatherGovAPI, l.Lat, l.Lng)
