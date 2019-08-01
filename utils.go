@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -112,7 +113,7 @@ func init() {
 
 // Wrapper function to validate all inputs
 // Returns City, State, Period, and nil error on success
-func SanitizeInputs(city string, state string, period string) (City, State, Period, error) {
+func SanitizeDetailedInputs(city string, state string, period string) (City, State, Period, error) {
 	cleanState, err := sanitizeState(state)
 	if err != nil {
 		return City{}, State{}, Period{}, err
@@ -123,6 +124,18 @@ func SanitizeInputs(city string, state string, period string) (City, State, Peri
 	}
 	cleanCity := sanitizeCity(city)
 	return cleanCity, cleanState, cleanPeriod, nil
+}
+
+func SanitizeHourlyInputs(city string, state string, hours string) (City, State, int64, error) {
+	cleanCity, cleanState, err := sanitizeLocation(city, state)
+	if err != nil {
+		return City{}, State{}, 0, err
+	}
+	cleanHours, err := strconv.ParseInt(hours, 10, 64)
+	if err != nil {
+		return City{}, State{}, 0, err
+	}
+	return cleanCity, cleanState, cleanHours, nil
 }
 
 // sanitizeCity creates a City struct from a given city name string
@@ -139,6 +152,12 @@ func sanitizeState(state string) (State, error) {
 		return State{asURL: cleanState, asKey: strings.ToLower(cleanState), asName: cleanState}, nil
 	}
 	return State{}, errors.New("Invalid state name.")
+}
+
+func sanitizeLocation(city string, state string) (City, State, error) {
+	cleanCity := sanitizeCity(city)
+	cleanState, err := sanitizeState(state)
+	return cleanCity, cleanState, err
 }
 
 // sanitizePeriod creates a Period struct from a given period name string
