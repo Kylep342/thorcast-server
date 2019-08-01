@@ -244,7 +244,6 @@ func (a *App) Initialize() {
 	a.InitializeRoutes()
 }
 
-
 // Starts the app to listen on the port specitied by the env variable SERVER_PORT
 func (a *App) Run() {
 	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
