@@ -9,6 +9,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
+
 const timeOutFmt string = "2019/07/24 1:00:00"
 
 // CacheDetailedForecasts stores the provided forecasts

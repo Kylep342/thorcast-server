@@ -126,7 +126,6 @@ func SanitizeDetailedInputs(city string, state string, period string) (City, Sta
 	return cleanCity, cleanState, cleanPeriod, nil
 }
 
-// TODO: Create specific errors for failure cases
 func SanitizeHourlyInputs(city string, state string, hours string) (City, State, int64, error) {
 	cleanCity, cleanState, err := sanitizeLocation(city, state)
 	if err != nil {
