@@ -105,7 +105,8 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 		resp := map[string]string{
 			"forecast": strings.Join(hourlyForecasts, "\n"),
 			"city": city.asName,
-			"state": state.asName}
+			"state": state.asName,
+			"hours": checkHours}
 			respondWithJSON(w, http.StatusOK, resp)
 	}
 }

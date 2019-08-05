@@ -10,8 +10,6 @@ import (
 )
 
 
-const timeOutFmt string = "2019/07/24 1:00:00"
-
 // CacheDetailedForecasts stores the provided forecasts
 // for the given City, State, and Period
 // key format is city.asKey_state.asKey_period.asKey
@@ -62,6 +60,7 @@ func (a *App) LookupDetailedForecast(city City, state State, period Period) (str
 	
 }
 
+// CacheHourlyForecasts 
 func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecasts Forecasts) []string {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
@@ -72,13 +71,13 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	var hourlyForecasts []string
 	for _, fc := range forecasts.Properties.Periods {
 		forecast := fmt.Sprintf(
-			"%s %d\u00b0 %s, Wind: %s %s, Forecast: %s",
+			"%s Forecast: %s, %d\u00b0 %s, Wind: %s %s",
 			fc.StartTime.Format(time.RFC3339),
+			fc.ShortForecast,
 			fc.Temperature,
 			fc.TemperatureUnit,
 			fc.WindSpeed,
-			fc.WindDirection,
-			fc.ShortForecast)
+			fc.WindDirection)
 		hourlyForecasts = append(hourlyForecasts, forecast)
 	}
 	err := a.Redis.RPush(key, hourlyForecasts).Err()
@@ -92,22 +91,33 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	return hourlyForecasts[:hours]
 }
 
+// LookupHourlyForecast
 func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
 		city.asKey,
 		state.asKey)
-	exists, err := a.Redis.Exists(key).Result()
+	val, err := a.Redis.LRange(key, 0, hours-1).Result()
 	if err != nil {
 		log.Fatal(err)
 	}
-	if exists == 1 {
-		val, err := a.Redis.LRange(key, 0, hours-1).Result()
-		if err != nil {
-			log.Fatal(err)
-		}
+	// len(val) == 0 means key does not exist
+	if len(val) > 0 {
 		return val, nil
-	} else {
-		return []string{}, redis.Nil
-	}	
+	}
+	return []string{}, redis.Nil
 }
+	// exists, err := a.Redis.Exists(key).Result()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// if exists == 1 {
+	// 	val, err := a.Redis.LRange(key, 0, hours-1).Result()
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	return val, nil
+	// } else {
+	// 	return []string{}, redis.Nil
+	// }	
+// }
