@@ -56,17 +56,17 @@ func (a *App) LookupDetailedForecast(city City, state State, period Period) (str
 		return "", err
 	}
 	return val, nil
-	
+
 }
 
-// CacheHourlyForecasts 
+// CacheHourlyForecasts
 func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecasts Forecasts) []string {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
 		city.asKey,
 		state.asKey)
 	now := time.Now()
-	expiry := now.Add(1*time.Hour).Truncate(1*time.Hour)
+	expiry := now.Add(1 * time.Hour).Truncate(1 * time.Hour)
 	var hourlyForecasts []string
 	for _, fc := range forecasts.Properties.Periods {
 		forecast := fmt.Sprintf(
@@ -106,17 +106,18 @@ func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]strin
 	}
 	return []string{}, redis.Nil
 }
-	// exists, err := a.Redis.Exists(key).Result()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if exists == 1 {
-	// 	val, err := a.Redis.LRange(key, 0, hours-1).Result()
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	return val, nil
-	// } else {
-	// 	return []string{}, redis.Nil
-	// }	
+
+// exists, err := a.Redis.Exists(key).Result()
+// if err != nil {
+// 	log.Fatal(err)
+// }
+// if exists == 1 {
+// 	val, err := a.Redis.LRange(key, 0, hours-1).Result()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	return val, nil
+// } else {
+// 	return []string{}, redis.Nil
+// }
 // }

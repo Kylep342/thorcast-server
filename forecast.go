@@ -60,8 +60,8 @@ type Points struct {
 
 // Struct holding data from the request from the Points.Properties.Forecast url
 type Forecasts struct {
-	Context  []interface{} `json:"@context"`
-	Type     string        `json:"type"`
+	Context []interface{} `json:"@context"`
+	Type    string        `json:"type"`
 	//TODO: This is not used in the app, but errors occur when parsing.
 	// temporarily omitted until resolved at: https://stackoverflow.com/questions/56141009/
 	//
@@ -76,27 +76,27 @@ type Forecasts struct {
 		Updated           time.Time `json:"updated"`
 		Units             string    `json:"units"`
 		ForecastGenerator string    `json:"forecastGenerator"`
-		GeneratedAt       string 	`json:"generatedAt"`
-		UpdateTime        string 	`json:"updateTime"`
-		ValidTimes        string 	`json:"validTimes"`
+		GeneratedAt       string    `json:"generatedAt"`
+		UpdateTime        string    `json:"updateTime"`
+		ValidTimes        string    `json:"validTimes"`
 		Elevation         struct {
 			Value    float64 `json:"value"`
 			UnitCode string  `json:"unitCode"`
 		} `json:"elevation"`
 		Periods []struct {
-			Number           int         	`json:"number"`
-			Name             string      	`json:"name"`
-			StartTime        time.Time      `json:"startTime"`
-			EndTime          time.Time      `json:"endTime"`
-			IsDaytime        bool        	`json:"isDaytime"`
-			Temperature      int         	`json:"temperature"`
-			TemperatureUnit  string      	`json:"temperatureUnit"`
-			TemperatureTrend interface{} 	`json:"temperatureTrend"`
-			WindSpeed        string      	`json:"windSpeed"`
-			WindDirection    string      	`json:"windDirection"`
-			Icon             string      	`json:"icon"`
-			ShortForecast    string      	`json:"shortForecast"`
-			DetailedForecast string      	`json:"detailedForecast"`
+			Number           int         `json:"number"`
+			Name             string      `json:"name"`
+			StartTime        time.Time   `json:"startTime"`
+			EndTime          time.Time   `json:"endTime"`
+			IsDaytime        bool        `json:"isDaytime"`
+			Temperature      int         `json:"temperature"`
+			TemperatureUnit  string      `json:"temperatureUnit"`
+			TemperatureTrend interface{} `json:"temperatureTrend"`
+			WindSpeed        string      `json:"windSpeed"`
+			WindDirection    string      `json:"windDirection"`
+			Icon             string      `json:"icon"`
+			ShortForecast    string      `json:"shortForecast"`
+			DetailedForecast string      `json:"detailedForecast"`
 		} `json:"periods"`
 	} `json:"properties"`
 }
@@ -125,7 +125,7 @@ func FetchDetailedForecastURL(l Location) string {
 
 // Function to extract the URL for an hourly forecast for the specified (Lat, Lng) pair
 func FetchHourlyForecastURL(l Location) string {
-	point := FetchPoints(l)	
+	point := FetchPoints(l)
 	return point.Properties.ForecastHourly
 }
 

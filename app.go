@@ -18,15 +18,15 @@ import (
 
 // global config struct holding database connection info
 type config struct {
-	sqlUsername 	string
-	sqlPassword 	string
-	sqlHost     	string
-	sqlPort     	string
-	sqlDbName   	string
-	redisPassword	string
-	redisHost		string
-	redisPort		string
-	redisDb			int
+	sqlUsername   string
+	sqlPassword   string
+	sqlHost       string
+	sqlPort       string
+	sqlDbName     string
+	redisPassword string
+	redisHost     string
+	redisPort     string
+	redisDb       int
 }
 
 // method to initialize config struct from environment variables
@@ -104,10 +104,10 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := map[string]string{
 			"forecast": strings.Join(hourlyForecasts, "\n"),
-			"city": city.asName,
-			"state": state.asName,
-			"hours": checkHours}
-			respondWithJSON(w, http.StatusOK, resp)
+			"city":     city.asName,
+			"state":    state.asName,
+			"hours":    checkHours}
+		respondWithJSON(w, http.StatusOK, resp)
 	}
 }
 
@@ -135,15 +135,15 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 		forecast, err := a.LookupDetailedForecast(city, state, period)
 		if err == redis.Nil {
 			row := a.DB.QueryRow(
-			`SELECT
+				`SELECT
 				lat,
 				lng
 			FROM geocodex
 			WHERE LOWER(city) = LOWER($1)
 			AND state = $2
 			;`,
-			l.City,
-			l.State)
+				l.City,
+				l.State)
 			if err := row.Scan(&l.Lat, &l.Lng); err != nil {
 				switch err {
 				case sql.ErrNoRows:
@@ -167,9 +167,9 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := map[string]string{
 			"forecast": forecast,
-			"city": city.asName,
-			"state": state.asName,
-			"period": period.asName}
+			"city":     city.asName,
+			"state":    state.asName,
+			"period":   period.asName}
 		respondWithJSON(w, http.StatusOK, resp)
 	}
 }
@@ -205,9 +205,9 @@ func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
 	a.IncrementLocation(l)
 	resp := map[string]string{
 		"forecast": forecast,
-		"city": city.asName,
-		"state": state.asName,
-		"period": period.asName}
+		"city":     city.asName,
+		"state":    state.asName,
+		"period":   period.asName}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
@@ -236,9 +236,9 @@ func (a *App) Initialize() {
 		log.Fatal(err)
 	}
 	a.Redis = redis.NewClient(&redis.Options{
-		Addr:		fmt.Sprintf("%s:%s", conf.redisHost, conf.redisPort),
-		Password:	conf.redisPassword,
-		DB:			conf.redisDb,
+		Addr:     fmt.Sprintf("%s:%s", conf.redisHost, conf.redisPort),
+		Password: conf.redisPassword,
+		DB:       conf.redisDb,
 	})
 	a.Router = mux.NewRouter()
 	a.Logger = handlers.CombinedLoggingHandler(os.Stdout, a.Router)
@@ -248,5 +248,5 @@ func (a *App) Initialize() {
 // Starts the app to listen on the port specitied by the env variable SERVER_PORT
 func (a *App) Run() {
 	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
-	log.Fatal(http.ListenAndServe(port , a.Logger))
+	log.Fatal(http.ListenAndServe(port, a.Logger))
 }
