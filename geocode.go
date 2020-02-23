@@ -54,13 +54,13 @@ func FetchCoords(city, state string) Coordinates {
 	requestURL := fmt.Sprintf("%s?address=%s,%s&key=%s", gcAPI, city, state, APIKey)
 	resp, err := http.Get(requestURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Google Maps API error is: %s\n", err.Error())
 	}
 	var geocode geocodeAPIResp
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&geocode)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("JSON decoding error is: %s\n", err.Error())
 	}
 	coord := Coordinates{Lat: geocode.Results[0].Geometry.Location.Lat, Lng: geocode.Results[0].Geometry.Location.Lng}
 	return coord

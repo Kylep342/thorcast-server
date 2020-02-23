@@ -2,3 +2,5 @@
 **/*.list
 
 .vscode/**
+
+orchestration/dev/redis.conf

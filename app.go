@@ -18,15 +18,15 @@ import (
 
 // global config struct holding database connection info
 type config struct {
-	sqlUsername 	string
-	sqlPassword 	string
-	sqlHost     	string
-	sqlPort     	string
-	sqlDbName   	string
-	redisPassword	string
-	redisHost		string
-	redisPort		string
-	redisDb			int
+	sqlUsername   string
+	sqlPassword   string
+	sqlHost       string
+	sqlPort       string
+	sqlDbName     string
+	redisPassword string
+	redisHost     string
+	redisPort     string
+	redisDb       int
 }
 
 // method to initialize config struct from environment variables
@@ -51,20 +51,32 @@ type App struct {
 	Redis  *redis.Client
 }
 
-func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func (a *App) Custom404Handler(w http.ResponseWriter, r *http.Request) {
+	code := http.StatusNotFound
+	respondWithError(w, code, http.StatusText(code))
+}
 
-	checkHours, ok := vars["hours"]
+func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+
+	var checkHours string
+
+	hasHours, ok := params["hours"]
 	if !ok {
 		checkHours = "12"
+	} else {
+		checkHours = hasHours[0]
 	}
+
 	city, state, hours, err := SanitizeHourlyInputs(
-		vars["city"],
-		vars["state"],
+		params["city"][0],
+		params["state"][0],
 		checkHours,
 	)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		log.Printf("Error checking client inputs: %s\n", err.Error())
+		code := http.StatusBadRequest
+		respondWithError(w, code, http.StatusText(code))
 	} else {
 		l := Location{City: city.asName, State: state.asName}
 		var hourlyForecasts []string
@@ -88,7 +100,9 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 						a.IncrementLocation(l)
 					}
 				default:
-					respondWithError(w, http.StatusBadRequest, err.Error())
+					log.Printf("Error scanning lat/lng from the database: %s\n", err.Error())
+					code := http.StatusInternalServerError
+					respondWithError(w, code, http.StatusText(code))
 				}
 			} else {
 				a.IncrementLocation(l)
@@ -98,61 +112,78 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 			forecasts := FetchForecasts(forecastURL)
 			hourlyForecasts = a.CacheHourlyForecasts(city, state, hours, forecasts)
 		} else if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
+			log.Printf("Error looking up hourly forecasts: %s\n", err.Error())
+			code := http.StatusInternalServerError
+			respondWithError(w, code, http.StatusText(code))
 		} else {
 			a.IncrementLocation(l)
 		}
 		resp := map[string]string{
 			"forecast": strings.Join(hourlyForecasts, "\n"),
-			"city": city.asName,
-			"state": state.asName,
-			"hours": checkHours}
-			respondWithJSON(w, http.StatusOK, resp)
+			"city":     city.asName,
+			"state":    state.asName,
+			"hours":    checkHours}
+		respondWithJSON(w, http.StatusOK, resp)
 	}
 }
 
 // Forecast returns the detailed forecast for a given city, state, and period
 // if period is not specified in the HTTP request, it defaults to today
 func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+	log.Printf("Scheme is: %s\n", r.URL.Scheme)
+	log.Printf("Host is: %s\n", r.URL.Host)
+	log.Printf("Path is: %s\n", r.URL.Path)
+	log.Printf("Query is: %s\n", r.URL.RawQuery)
 
-	checkPeriod, ok := vars["period"]
+	params := r.URL.Query()
+
+	var checkPeriod string
+
+	hasPeriod, ok := params["period"]
 	if !ok {
 		checkPeriod = "today"
+	} else {
+		checkPeriod = hasPeriod[0]
 	}
 
 	city, state, period, err := SanitizeDetailedInputs(
-		vars["city"],
-		vars["state"],
+		params["city"][0],
+		params["state"][0],
 		checkPeriod,
 	)
 	// l := Location{City: city.asName, State: state.asName}
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		log.Printf("Error sanitizing client inputs: %s\n", err.Error())
+		code := http.StatusBadRequest
+		respondWithError(w, code, http.StatusText(code))
 	} else {
 		l := Location{City: city.asName, State: state.asName}
 		var forecast string
 		forecast, err := a.LookupDetailedForecast(city, state, period)
+		log.Printf("Redis Error is: %s\n", err.Error())
 		if err == redis.Nil {
 			row := a.DB.QueryRow(
-			`SELECT
+				`SELECT
 				lat,
 				lng
 			FROM geocodex
 			WHERE LOWER(city) = LOWER($1)
 			AND state = $2
 			;`,
-			l.City,
-			l.State)
+				l.City,
+				l.State)
 			if err := row.Scan(&l.Lat, &l.Lng); err != nil {
+				log.Printf("row scan error: %s\n", err.Error())
 				switch err {
 				case sql.ErrNoRows:
+					log.Printf("city: %s state: %s\n", city.asURL, state.asURL)
 					l.SetCoords(FetchCoords(city.asURL, state.asURL))
 					if err = a.RegisterLocation(l); err != nil {
 						a.IncrementLocation(l)
 					}
 				default:
-					respondWithError(w, http.StatusBadRequest, err.Error())
+					code := http.StatusBadRequest
+					respondWithError(w, code, http.StatusText(code))
 				}
 			} else {
 				a.IncrementLocation(l)
@@ -161,15 +192,17 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 			forecasts := FetchForecasts(forecastURL)
 			forecast = a.CacheDetailedForecasts(city, state, period, forecasts)
 		} else if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
+			log.Printf("Error looking up detailed forecast: %s\n", err.Error())
+			code := http.StatusInternalServerError
+			respondWithError(w, code, http.StatusText(code))
 		} else {
 			a.IncrementLocation(l)
 		}
 		resp := map[string]string{
 			"forecast": forecast,
-			"city": city.asName,
-			"state": state.asName,
-			"period": period.asName}
+			"city":     city.asName,
+			"state":    state.asName,
+			"period":   period.asName}
 		respondWithJSON(w, http.StatusOK, resp)
 	}
 }
@@ -205,19 +238,25 @@ func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
 	a.IncrementLocation(l)
 	resp := map[string]string{
 		"forecast": forecast,
-		"city": city.asName,
-		"state": state.asName,
-		"period": period.asName}
+		"city":     city.asName,
+		"state":    state.asName,
+		"period":   period.asName}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
 // Initializes all endpoints for the api
 func (a *App) InitializeRoutes() {
-	a.Router.HandleFunc("/api/forecast/detailed/city={city}&state={state}&period={period}", a.DetailedForecast).Methods("GET")
-	a.Router.HandleFunc("/api/forecast/detailed/city={city}&state={state}", a.DetailedForecast).Methods("GET")
+	a.Router.HandleFunc("/api/forecast/detailed", a.DetailedForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}", "period", "{period:[a-zA-Z+]+}").Methods("GET")
+	a.Router.HandleFunc("/api/forecast/detailed", a.DetailedForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}").Methods("GET")
 	a.Router.HandleFunc("/api/forecast/detailed/random", a.RandomDetailedForecast).Methods("GET")
-	a.Router.HandleFunc("/api/forecast/hourly/city={city}&state={state}&hours={hours}", a.HourlyForecast).Methods("GET")
-	a.Router.HandleFunc("/api/forecast/hourly/city={city}&state={state}", a.HourlyForecast).Methods("GET")
+	a.Router.HandleFunc("/api/forecast/hourly", a.HourlyForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}", "hours", "{hours:[0-9]+}").Methods("GET")
+	a.Router.HandleFunc("/api/forecast/hourly", a.HourlyForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}").Methods("GET")
+	// a.Router.HandleFunc("/api/forecast/detailed?city={city}&state={state}&period={period}", a.DetailedForecast).Methods("GET")
+	// a.Router.HandleFunc("/api/forecast/detailed?city={city}&state={state}", a.DetailedForecast).Methods("GET")
+	// a.Router.HandleFunc("/api/forecast/detailed?random", a.RandomDetailedForecast).Methods("GET")
+	// a.Router.HandleFunc("/api/forecast/hourly?city={city}&state={state}&hours={hours}", a.HourlyForecast).Methods("GET")
+	// a.Router.HandleFunc("/api/forecast/hourly?city={city}&state={state}", a.HourlyForecast).Methods("GET")
+	a.Router.NotFoundHandler = http.HandlerFunc(a.Custom404Handler)
 }
 
 // Initializes the application as a whole
@@ -236,9 +275,9 @@ func (a *App) Initialize() {
 		log.Fatal(err)
 	}
 	a.Redis = redis.NewClient(&redis.Options{
-		Addr:		fmt.Sprintf("%s:%s", conf.redisHost, conf.redisPort),
-		Password:	conf.redisPassword,
-		DB:			conf.redisDb,
+		Addr:     fmt.Sprintf("%s:%s", conf.redisHost, conf.redisPort),
+		Password: conf.redisPassword,
+		DB:       conf.redisDb,
 	})
 	a.Router = mux.NewRouter()
 	a.Logger = handlers.CombinedLoggingHandler(os.Stdout, a.Router)
@@ -248,5 +287,5 @@ func (a *App) Initialize() {
 // Starts the app to listen on the port specitied by the env variable SERVER_PORT
 func (a *App) Run() {
 	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
-	log.Fatal(http.ListenAndServe(port , a.Logger))
+	log.Fatal(http.ListenAndServe(port, a.Logger))
 }
