@@ -102,7 +102,7 @@ type State struct {
 // as well as a boolean representing the state of daytime in the period
 type Period struct {
 	asKey     string
-	asName 	  string
+	asName    string
 	dayOfWeek string
 	isDaytime bool
 }
@@ -169,17 +169,17 @@ func sanitizePeriod(period string) (Period, error) {
 	case strings.Contains(strings.ToLower(period), "tonight"):
 		cleanPeriod = fmt.Sprintf("%s night", time.Now().Weekday().String())
 	case strings.Contains(strings.ToLower(period), "tomorrow"):
-		cleanPeriod = time.Now().AddDate(0,0,1).Weekday().String()
+		cleanPeriod = time.Now().AddDate(0, 0, 1).Weekday().String()
 	case strings.Contains(strings.ToLower(period), "tomorrow night"):
-		cleanPeriod = fmt.Sprintf("%s night", time.Now().AddDate(0,0,1).Weekday().String())
+		cleanPeriod = fmt.Sprintf("%s night", time.Now().AddDate(0, 0, 1).Weekday().String())
 	default:
 		cleanPeriod = period
 	}
 	m := periodRE.FindStringSubmatch(separatorRE.ReplaceAllString(cleanPeriod, " "))
 	if m != nil && m[2] == "" {
 		return Period{
-			asKey: strings.ToLower(m[1]),
-			asName: strings.Title(m[1]),
+			asKey:     strings.ToLower(m[1]),
+			asName:    strings.Title(m[1]),
 			dayOfWeek: strings.Title(m[1]),
 			isDaytime: true}, nil
 	} else if m != nil {
