@@ -130,10 +130,6 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 // Forecast returns the detailed forecast for a given city, state, and period
 // if period is not specified in the HTTP request, it defaults to today
 func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Scheme is: %s\n", r.URL.Scheme)
-	log.Printf("Host is: %s\n", r.URL.Host)
-	log.Printf("Path is: %s\n", r.URL.Path)
-	log.Printf("Query is: %s\n", r.URL.RawQuery)
 
 	params := r.URL.Query()
 
@@ -151,7 +147,6 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 		params["state"][0],
 		checkPeriod,
 	)
-	// l := Location{City: city.asName, State: state.asName}
 	if err != nil {
 		log.Printf("Error sanitizing client inputs: %s\n", err.Error())
 		code := http.StatusBadRequest
@@ -251,11 +246,6 @@ func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/api/forecast/detailed/random", a.RandomDetailedForecast).Methods("GET")
 	a.Router.HandleFunc("/api/forecast/hourly", a.HourlyForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}", "hours", "{hours:[0-9]+}").Methods("GET")
 	a.Router.HandleFunc("/api/forecast/hourly", a.HourlyForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}").Methods("GET")
-	// a.Router.HandleFunc("/api/forecast/detailed?city={city}&state={state}&period={period}", a.DetailedForecast).Methods("GET")
-	// a.Router.HandleFunc("/api/forecast/detailed?city={city}&state={state}", a.DetailedForecast).Methods("GET")
-	// a.Router.HandleFunc("/api/forecast/detailed?random", a.RandomDetailedForecast).Methods("GET")
-	// a.Router.HandleFunc("/api/forecast/hourly?city={city}&state={state}&hours={hours}", a.HourlyForecast).Methods("GET")
-	// a.Router.HandleFunc("/api/forecast/hourly?city={city}&state={state}", a.HourlyForecast).Methods("GET")
 	a.Router.NotFoundHandler = http.HandlerFunc(a.Custom404Handler)
 }
 

@@ -165,15 +165,15 @@ func sanitizePeriod(period string) (Period, error) {
 	var cleanPeriod string
 	switch {
 	case strings.Contains(strings.ToLower(period), "today"):
-		cleanPeriod = time.Now().Weekday().String()
+		cleanPeriod = time.Now().UTC().Weekday().String()
 	case strings.Contains(strings.ToLower(period), "tonight"):
-		cleanPeriod = fmt.Sprintf("%s night", time.Now().Weekday().String())
-	case strings.Contains(strings.ToLower(period), "tomorrow"):
-		cleanPeriod = time.Now().AddDate(0, 0, 1).Weekday().String()
+		cleanPeriod = fmt.Sprintf("%s night", time.Now().UTC().Weekday().String())
 	case strings.Contains(strings.ToLower(period), "tomorrow night"):
-		cleanPeriod = fmt.Sprintf("%s night", time.Now().AddDate(0, 0, 1).Weekday().String())
+		cleanPeriod = fmt.Sprintf("%s night", time.Now().UTC().AddDate(0, 0, 1).Weekday().String())
+	case strings.Contains(strings.ToLower(period), "tomorrow"):
+		cleanPeriod = time.Now().UTC().AddDate(0, 0, 1).Weekday().String()
 	default:
-		cleanPeriod = period
+		cleanPeriod = strings.ToLower(period)
 	}
 	m := periodRE.FindStringSubmatch(separatorRE.ReplaceAllString(cleanPeriod, " "))
 	if m != nil && m[2] == "" {
@@ -202,7 +202,7 @@ func sanitizePeriod(period string) (Period, error) {
 // randomPeriod generates a random day of the week and time of day
 // and returns the corresponding Period struct
 func randomPeriod() Period {
-	dayOfWeek := time.Now().AddDate(0, 0, rand.Intn(7)).Weekday().String()
+	dayOfWeek := time.Now().UTC().AddDate(0, 0, rand.Intn(7)).Weekday().String()
 	timeOfDay := timesOfDay[rand.Intn(2)]
 	p, _ := sanitizePeriod(fmt.Sprintf("%s%s", dayOfWeek, timeOfDay))
 	return p

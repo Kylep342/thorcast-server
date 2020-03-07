@@ -13,7 +13,7 @@ import (
 // for the given City, State, and Period
 // key format is city.asKey_state.asKey_period.asKey
 func (a *App) CacheDetailedForecasts(city City, state State, period Period, forecasts Forecasts) string {
-	now := time.Now()
+	now := time.Now().UTC()
 	var detailedForecast string
 	for _, forecast := range forecasts.Properties.Periods {
 		dayOfWeek := forecast.StartTime.Weekday().String()
@@ -65,7 +65,7 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 		"%s_%s_hourly",
 		city.asKey,
 		state.asKey)
-	now := time.Now()
+	now := time.Now().UTC()
 	expiry := now.Add(1 * time.Hour).Truncate(1 * time.Hour)
 	var hourlyForecasts []string
 	for _, fc := range forecasts.Properties.Periods {
