@@ -16,7 +16,11 @@ func (a *App) CacheDetailedForecasts(city City, state State, period Period, fore
 	now := time.Now().UTC()
 	var detailedForecast string
 	for _, forecast := range forecasts.Properties.Periods {
-		dayOfWeek := forecast.StartTime.Weekday().String()
+		// log.Printf("Start time is: %s, end time is: %s\n", forecast.StartTime, forecast.EndTime)
+		fcStartTime, _ := time.Parse(time.RFC3339, forecast.StartTime)
+		fcEndTime, _ := time.Parse(time.RFC3339, forecast.EndTime)
+		// log.Printf("fcStartTime is: %v, fcEndTime is: %v\n", fcStartTime, fcEndTime)
+		dayOfWeek := fcStartTime.Weekday().String()
 		var timeOfDay string
 		if forecast.IsDaytime {
 			timeOfDay = ""
@@ -29,13 +33,15 @@ func (a *App) CacheDetailedForecasts(city City, state State, period Period, fore
 			state.asKey,
 			strings.ToLower(dayOfWeek),
 			timeOfDay)
+		// log.Printf("Key is %s\n", key)
 		err := a.Redis.Set(
 			key,
 			forecast.DetailedForecast,
-			forecast.EndTime.Sub(now)).Err()
+			fcEndTime.Sub(now)).Err()
 		if err != nil {
 			log.Fatal(err)
 		}
+		// log.Printf("dayOfWeek is %s, period DOW is %s. fcDayTime is %t, periodDayTime is %t\n", dayOfWeek, period.dayOfWeek, forecast.IsDaytime, period.isDaytime)
 		if dayOfWeek == period.dayOfWeek && forecast.IsDaytime == period.isDaytime {
 			detailedForecast = forecast.DetailedForecast
 		}
@@ -69,9 +75,10 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	expiry := now.Add(1 * time.Hour).Truncate(1 * time.Hour)
 	var hourlyForecasts []string
 	for _, fc := range forecasts.Properties.Periods {
+		fcDate, _ := time.Parse(time.RFC3339, fc.StartTime)
 		forecast := fmt.Sprintf(
 			"%s Forecast: %s, %d\u00b0 %s, Wind: %s %s",
-			fc.StartTime.Format(time.RFC3339),
+			fcDate.Format(time.RFC3339),
 			fc.ShortForecast,
 			fc.Temperature,
 			fc.TemperatureUnit,

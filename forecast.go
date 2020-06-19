@@ -41,11 +41,11 @@ type Points struct {
 				City     string `json:"city"`
 				State    string `json:"state"`
 				Distance struct {
-					Value    float64 `json:"value"`
-					UnitCode string  `json:"unitCode"`
+					Value    string `json:"value"`
+					UnitCode string `json:"unitCode"`
 				} `json:"distance"`
 				Bearing struct {
-					Value    int    `json:"value"`
+					Value    string `json:"value"`
 					UnitCode string `json:"unitCode"`
 				} `json:"bearing"`
 			} `json:"properties"`
@@ -60,36 +60,30 @@ type Points struct {
 
 // Struct holding data from the request from the Points.Properties.Forecast url
 type Forecasts struct {
-	Context []interface{} `json:"@context"`
-	Type    string        `json:"type"`
-	//TODO: This is not used in the app, but errors occur when parsing.
-	// temporarily omitted until resolved at: https://stackoverflow.com/questions/56141009/
-	//
-	// Geometry struct {
-	// 	Type       string `json:"type"`
-	// 	Geometries []struct {
-	// 		Type        string    `json:"type"`
-	// 		Coordinates []float64 `json:"coordinates"`
-	// 	} `json:"geometries"`
-	// } `json:"geometry"`
+	Context  []interface{} `json:"@context"`
+	Type     string        `json:"type"`
+	Geometry struct {
+		Type        string        `json:"type"`
+		Coordinates [][][]float64 `json:"coordinates"`
+	} `json:"geometry"`
 	Properties struct {
 		Updated           time.Time `json:"updated"`
 		Units             string    `json:"units"`
 		ForecastGenerator string    `json:"forecastGenerator"`
-		GeneratedAt       string    `json:"generatedAt"`
-		UpdateTime        string    `json:"updateTime"`
+		GeneratedAt       time.Time `json:"generatedAt"`
+		UpdateTime        time.Time `json:"updateTime"`
 		ValidTimes        string    `json:"validTimes"`
 		Elevation         struct {
-			Value    float64 `json:"value"`
-			UnitCode string  `json:"unitCode"`
+			Value    string `json:"value"`
+			UnitCode string `json:"unitCode"`
 		} `json:"elevation"`
 		Periods []struct {
 			Number           int         `json:"number"`
 			Name             string      `json:"name"`
-			StartTime        time.Time   `json:"startTime"`
-			EndTime          time.Time   `json:"endTime"`
+			StartTime        string      `json:"startTime"`
+			EndTime          string      `json:"endTime"`
 			IsDaytime        bool        `json:"isDaytime"`
-			Temperature      int         `json:"temperature"`
+			Temperature      string      `json:"temperature"`
 			TemperatureUnit  string      `json:"temperatureUnit"`
 			TemperatureTrend interface{} `json:"temperatureTrend"`
 			WindSpeed        string      `json:"windSpeed"`
@@ -129,7 +123,7 @@ func FetchHourlyForecastURL(l Location) string {
 	return point.Properties.ForecastHourly
 }
 
-// Funciton to extract all periods of forecasts for a reuqested city and state
+// Funciton to extract all periods of forecasts for a requested city and state
 func FetchForecasts(forecastsURL string) Forecasts {
 	resp, err := http.Get(forecastsURL)
 	if err != nil {

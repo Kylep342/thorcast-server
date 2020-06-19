@@ -155,7 +155,6 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 		l := Location{City: city.asName, State: state.asName}
 		var forecast string
 		forecast, err := a.LookupDetailedForecast(city, state, period)
-		log.Printf("Redis Error is: %s\n", err.Error())
 		if err == redis.Nil {
 			row := a.DB.QueryRow(
 				`SELECT

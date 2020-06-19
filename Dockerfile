@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine AS build_base
+FROM golang:1.14-alpine AS build_base
 
 # setup of thorcast
 RUN apk add bash git
@@ -20,6 +20,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o thorserver
 # execute the binary
 FROM alpine
 RUN apk add ca-certificates
+# RUN apk add ca-certificates tzdata
+# ENV TZ UTC
 COPY --from=server_builder /go/src/github.com/kylep342/thorcast-server/thorserver /bin/thorserver
 EXPOSE 8000
 
