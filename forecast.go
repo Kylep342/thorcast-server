@@ -41,12 +41,12 @@ type Points struct {
 				City     string `json:"city"`
 				State    string `json:"state"`
 				Distance struct {
-					Value    string `json:"value"`
-					UnitCode string `json:"unitCode"`
+					Value    float64 `json:"value"`
+					UnitCode string  `json:"unitCode"`
 				} `json:"distance"`
 				Bearing struct {
-					Value    string `json:"value"`
-					UnitCode string `json:"unitCode"`
+					Value    float64 `json:"value"`
+					UnitCode string  `json:"unitCode"`
 				} `json:"bearing"`
 			} `json:"properties"`
 		} `json:"relativeLocation"`
@@ -74,8 +74,8 @@ type Forecasts struct {
 		UpdateTime        time.Time `json:"updateTime"`
 		ValidTimes        string    `json:"validTimes"`
 		Elevation         struct {
-			Value    string `json:"value"`
-			UnitCode string `json:"unitCode"`
+			Value    float64 `json:"value"`
+			UnitCode string  `json:"unitCode"`
 		} `json:"elevation"`
 		Periods []struct {
 			Number           int         `json:"number"`
@@ -83,7 +83,7 @@ type Forecasts struct {
 			StartTime        string      `json:"startTime"`
 			EndTime          string      `json:"endTime"`
 			IsDaytime        bool        `json:"isDaytime"`
-			Temperature      string      `json:"temperature"`
+			Temperature      float64     `json:"temperature"`
 			TemperatureUnit  string      `json:"temperatureUnit"`
 			TemperatureTrend interface{} `json:"temperatureTrend"`
 			WindSpeed        string      `json:"windSpeed"`
