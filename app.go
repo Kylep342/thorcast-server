@@ -13,7 +13,9 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	_ "github.com/lib/pq"
+
+	// _ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/stdlib"
 )
 
 // global config struct holding database connection info
@@ -176,6 +178,7 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 						a.IncrementLocation(l)
 					}
 				default:
+					log.Printf("error is: %s\n", err.Error())
 					code := http.StatusBadRequest
 					respondWithError(w, code, http.StatusText(code))
 				}
@@ -259,7 +262,7 @@ func (a *App) Initialize() {
 		conf.sqlHost,
 		conf.sqlPort,
 		conf.sqlDbName)
-	a.DB, err = sql.Open("postgres", sqlDataSource)
+	a.DB, err = sql.Open("pgx", sqlDataSource)
 	if err != nil {
 		log.Fatal(err)
 	}
