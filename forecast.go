@@ -95,31 +95,39 @@ type Forecasts struct {
 	} `json:"properties"`
 }
 
-// Experimental
-func FetchPoints(l Location) Points {
+func fetchPoints(l Location) (Points, error) {
 	requestURL := fmt.Sprintf("%s/%f,%f", weatherGovAPI, l.Lat, l.Lng)
 	resp, err := http.Get(requestURL)
+	log.Printf("response is %v\n", resp)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error is %e\n", err.Error())
+		return Points{}, err
 	}
 	var p Points
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error is %e\n", err.Error())
+		return Points{}, err
 	}
-	return p
+	return p, nil
 }
 
 // Function to extract the URL for a forecast for the specified (Lat, Lng) pair
 func FetchDetailedForecastURL(l Location) string {
-	point := FetchPoints(l)
+	point, err := fetchPoints(l)
+	if err != nil {
+		log.Printf("Error caught.\n")
+	}
 	return point.Properties.Forecast
 }
 
 // Function to extract the URL for an hourly forecast for the specified (Lat, Lng) pair
 func FetchHourlyForecastURL(l Location) string {
-	point := FetchPoints(l)
+	point, err := fetchPoints(l)
+	if err != nil {
+		log.Printf("Error caught.\n")
+	}
 	return point.Properties.ForecastHourly
 }
 
@@ -127,7 +135,8 @@ func FetchHourlyForecastURL(l Location) string {
 func FetchForecasts(forecastsURL string) Forecasts {
 	resp, err := http.Get(forecastsURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error is %e\n", err.Error())
+		return Forecasts{}
 	}
 	var forecasts Forecasts
 	defer resp.Body.Close()
@@ -137,13 +146,3 @@ func FetchForecasts(forecastsURL string) Forecasts {
 	}
 	return forecasts
 }
-
-// SelectForecast extracts the desired forecast period from the response of FetchForecasts
-// func SelectForecast(forecasts Forecasts, period Period) string {
-// 	for _, fc := range forecasts.Properties.Periods {
-// 		if (fc.StartTime.Weekday().String() == period.dayOfWeek) && (fc.IsDaytime == period.isDaytime) {
-// 			return fc.DetailedForecast
-// 		}
-// 	}
-// 	return ""
-// }

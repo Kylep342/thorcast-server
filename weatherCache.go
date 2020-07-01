@@ -77,10 +77,10 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	for _, fc := range forecasts.Properties.Periods {
 		fcDate, _ := time.Parse(time.RFC3339, fc.StartTime)
 		forecast := fmt.Sprintf(
-			"%s Forecast: %s, %d\u00b0 %s, Wind: %s %s",
+			"%s Forecast: %s, Temperature: %d\u00B0 %s, Wind: %s %s",
 			fcDate.Format(time.RFC3339),
 			fc.ShortForecast,
-			fc.Temperature,
+			int(fc.Temperature),
 			fc.TemperatureUnit,
 			fc.WindSpeed,
 			fc.WindDirection)
@@ -113,18 +113,3 @@ func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]strin
 	}
 	return []string{}, redis.Nil
 }
-
-// exists, err := a.Redis.Exists(key).Result()
-// if err != nil {
-// 	log.Fatal(err)
-// }
-// if exists == 1 {
-// 	val, err := a.Redis.LRange(key, 0, hours-1).Result()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	return val, nil
-// } else {
-// 	return []string{}, redis.Nil
-// }
-// }
