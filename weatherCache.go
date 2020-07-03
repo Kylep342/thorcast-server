@@ -39,7 +39,7 @@ func (a *App) CacheDetailedForecasts(city City, state State, period Period, fore
 			forecast.DetailedForecast,
 			fcEndTime.Sub(now)).Err()
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error occurred when setting a detailedForecast in Redis\nError is: %s\n", err.Error())
 		}
 		// log.Printf("dayOfWeek is %s, period DOW is %s. fcDayTime is %t, periodDayTime is %t\n", dayOfWeek, period.dayOfWeek, forecast.IsDaytime, period.isDaytime)
 		if dayOfWeek == period.dayOfWeek && forecast.IsDaytime == period.isDaytime {
@@ -88,11 +88,11 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	}
 	err := a.Redis.RPush(key, hourlyForecasts).Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error occurred when appending an hourly forecast to a list\nError is: %s\n", err.Error())
 	}
 	err = a.Redis.ExpireAt(key, expiry).Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error occurred when setting an expiry for a list\nError is: %s\n", err.Error())
 	}
 	return hourlyForecasts[:hours]
 }
@@ -105,7 +105,8 @@ func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]strin
 		state.asKey)
 	val, err := a.Redis.LRange(key, 0, hours-1).Result()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error occurred when reading hourly forecasts from a list\nError is: %s\n", err.Error())
+		return []string{}, err
 	}
 	// len(val) == 0 means key does not exist
 	if len(val) > 0 {

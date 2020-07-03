@@ -97,9 +97,15 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 			if err := row.Scan(&l.Lat, &l.Lng); err != nil {
 				switch err {
 				case sql.ErrNoRows:
-					l.SetCoords(FetchCoords(city.asURL, state.asURL))
-					if err = a.RegisterLocation(l); err != nil {
-						a.IncrementLocation(l)
+					coords, err := FetchCoords(city.asURL, state.asURL)
+					if err != nil {
+						code := http.StatusNotFound
+						respondWithError(w, code, http.StatusText(code))
+					} else {
+						l.SetCoords(coords)
+						if err = a.RegisterLocation(l); err != nil {
+							a.IncrementLocation(l)
+						}
 					}
 				default:
 					log.Printf("Error scanning lat/lng from the database: %s\n", err.Error())
@@ -109,9 +115,17 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 			} else {
 				a.IncrementLocation(l)
 			}
-			forecastURL := FetchHourlyForecastURL(l)
-			log.Printf("%s", forecastURL)
-			forecasts := FetchForecasts(forecastURL)
+			forecastURL, err := FetchHourlyForecastURL(l)
+			if err != nil {
+				code := http.StatusInternalServerError
+				respondWithError(w, code, http.StatusText(code))
+			}
+			forecasts, err := FetchForecasts(forecastURL)
+			if err != nil {
+				log.Printf("Error when fetching forecasts\nError is %s\n", err.Error())
+				code := http.StatusInternalServerError
+				respondWithError(w, code, http.StatusText(code))
+			}
 			hourlyForecasts = a.CacheHourlyForecasts(city, state, hours, forecasts)
 		} else if err != nil {
 			log.Printf("Error looking up hourly forecasts: %s\n", err.Error())
@@ -173,9 +187,15 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 				switch err {
 				case sql.ErrNoRows:
 					log.Printf("city: %s state: %s\n", city.asURL, state.asURL)
-					l.SetCoords(FetchCoords(city.asURL, state.asURL))
-					if err = a.RegisterLocation(l); err != nil {
-						a.IncrementLocation(l)
+					coords, err := FetchCoords(city.asURL, state.asURL)
+					if err != nil {
+						code := http.StatusNotFound
+						respondWithError(w, code, http.StatusText(code))
+					} else {
+						l.SetCoords(coords)
+						if err = a.RegisterLocation(l); err != nil {
+							a.IncrementLocation(l)
+						}
 					}
 				default:
 					log.Printf("error is: %s\n", err.Error())
@@ -185,8 +205,17 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 			} else {
 				a.IncrementLocation(l)
 			}
-			forecastURL := FetchDetailedForecastURL(l)
-			forecasts := FetchForecasts(forecastURL)
+			forecastURL, err := FetchDetailedForecastURL(l)
+			if err != nil {
+				code := http.StatusInternalServerError
+				respondWithError(w, code, http.StatusText(code))
+			}
+			forecasts, err := FetchForecasts(forecastURL)
+			if err != nil {
+				log.Printf("Error when fetching forecasts\nError is %s\n", err.Error())
+				code := http.StatusInternalServerError
+				respondWithError(w, code, http.StatusText(code))
+			}
 			forecast = a.CacheDetailedForecasts(city, state, period, forecasts)
 		} else if err != nil {
 			log.Printf("Error looking up detailed forecast: %s\n", err.Error())
@@ -220,7 +249,9 @@ func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
 		ORDER BY random()
 		LIMIT 1;`)
 	if err := row.Scan(&l.City, &l.State, &l.Lat, &l.Lng); err != nil {
-		log.Fatal(err)
+		log.Printf("Error when reading geocodex information from the database.\nError is %s\n", err.Error())
+		code := http.StatusInternalServerError
+		respondWithError(w, code, http.StatusText(code))
 	}
 
 	period := randomPeriod()
@@ -228,8 +259,17 @@ func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
 	state, _ := sanitizeState(l.State)
 	forecast, err := a.LookupDetailedForecast(city, state, period)
 	if err == redis.Nil {
-		forecastURL := FetchDetailedForecastURL(l)
-		forecasts := FetchForecasts(forecastURL)
+		forecastURL, err := FetchDetailedForecastURL(l)
+		if err != nil {
+			code := http.StatusInternalServerError
+			respondWithError(w, code, http.StatusText(code))
+		}
+		forecasts, err := FetchForecasts(forecastURL)
+		if err != nil {
+			log.Printf("Error when fetching forecasts\nError is %s\n", err.Error())
+			code := http.StatusInternalServerError
+			respondWithError(w, code, http.StatusText(code))
+		}
 		forecast = a.CacheDetailedForecasts(city, state, period, forecasts)
 	}
 	a.IncrementLocation(l)

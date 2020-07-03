@@ -7,12 +7,12 @@ Thorcast is a Discord/Slack chatbot that provides weather forecasts on demand
 ## Getting started
 
 - Clone the repo at https://github.com/Kylep342/thorcast-server.git
-- Set up your own 'env.list' file in the structure demonstrated in env.list.example
+- Set up your own '.env' file in the structure demonstrated in .env.example
 - Run `docker build -t kylep342/thorcast-server .` to set up the Docker Image
 
 ## Usage
 
-`docker run --env-file env.list -p 8000:8000 kylep342/thorcast-server` will start the server at 0.0.0.0:8000
+`docker run --env-file .env -p 8000:8000 kylep342/thorcast-server` will start the server at 0.0.0.0:8000
 
 Example:
 

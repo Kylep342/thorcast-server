@@ -114,35 +114,38 @@ func fetchPoints(l Location) (Points, error) {
 }
 
 // Function to extract the URL for a forecast for the specified (Lat, Lng) pair
-func FetchDetailedForecastURL(l Location) string {
+func FetchDetailedForecastURL(l Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
 		log.Printf("Error caught.\n")
+		return "", err
 	}
-	return point.Properties.Forecast
+	return point.Properties.Forecast, nil
 }
 
 // Function to extract the URL for an hourly forecast for the specified (Lat, Lng) pair
-func FetchHourlyForecastURL(l Location) string {
+func FetchHourlyForecastURL(l Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
 		log.Printf("Error caught.\n")
+		return "", err
 	}
-	return point.Properties.ForecastHourly
+	return point.Properties.ForecastHourly, nil
 }
 
 // Funciton to extract all periods of forecasts for a requested city and state
-func FetchForecasts(forecastsURL string) Forecasts {
+func FetchForecasts(forecastsURL string) (Forecasts, error) {
 	resp, err := http.Get(forecastsURL)
 	if err != nil {
 		log.Printf("Error is %e\n", err.Error())
-		return Forecasts{}
+		return Forecasts{}, err
 	}
 	var forecasts Forecasts
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&forecasts)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error when decoding json to Forecasts.\nError is %s\n", err.Error())
+		return Forecasts{}, err
 	}
-	return forecasts
+	return forecasts, nil
 }

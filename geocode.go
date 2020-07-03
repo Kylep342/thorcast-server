@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,8 +37,9 @@ type geocodeAPIResp struct {
 				} `json:"southwest"`
 			} `json:"viewport"`
 		} `json:"geometry"`
-		PlaceID string   `json:"place_id"`
-		Types   []string `json:"types"`
+		PartialMatch bool     `json:"partial_match"`
+		PlaceID      string   `json:"place_id"`
+		Types        []string `json:"types"`
 	} `json:"results"`
 	Status string `json:"status"`
 }
@@ -49,7 +51,7 @@ type Coordinates struct {
 }
 
 // FetchCoords returns coordinates for a given address
-func FetchCoords(city, state string) Coordinates {
+func FetchCoords(city, state string) (Coordinates, error) {
 	APIKey := os.Getenv("GOOGLE_MAPS_API_KEY")
 	requestURL := fmt.Sprintf("%s?address=%s,%s&key=%s", gcAPI, city, state, APIKey)
 	resp, err := http.Get(requestURL)
@@ -62,6 +64,18 @@ func FetchCoords(city, state string) Coordinates {
 	if err != nil {
 		log.Printf("JSON decoding error is: %s\n", err.Error())
 	}
-	coord := Coordinates{Lat: geocode.Results[0].Geometry.Location.Lat, Lng: geocode.Results[0].Geometry.Location.Lng}
-	return coord
+	log.Printf("Status is %s\n", geocode.Status)
+	if geocode.Status != "OK" {
+		switch geocode.Status {
+		case "ZERO_RESULTS":
+			return Coordinates{}, errors.New("location not found")
+		default:
+			return Coordinates{}, errors.New("internal error")
+		}
+	}
+	if geocode.Results[0].PartialMatch {
+		return Coordinates{}, errors.New("location not found")
+	}
+	coords := Coordinates{Lat: geocode.Results[0].Geometry.Location.Lat, Lng: geocode.Results[0].Geometry.Location.Lng}
+	return coords, nil
 }

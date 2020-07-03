@@ -18,7 +18,7 @@ func (a *App) RegisterLocation(l Location) error {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return err
 		} else {
-			log.Fatal(err)
+			log.Printf("An unexpected error occurred when inserting into geocodex\nError is: %s\n", err.Error())
 		}
 	}
 	return nil
@@ -33,6 +33,6 @@ func (a *App) IncrementLocation(l Location) {
 	foo, err := a.DB.Exec(updateStmt, l.City, l.State)
 	log.Printf("%s", foo)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("An unexpected error occurred when updating requests in geocodex\nError is: %s\n", err.Error())
 	}
 }

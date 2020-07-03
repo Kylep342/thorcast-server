@@ -1,6 +1,6 @@
 # No need to hold example files for env configuration in image
-env.list
-env.list.example
+.env
+.env.example
 
 #
 README.md

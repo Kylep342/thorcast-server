@@ -1,5 +1,5 @@
 # Ignoring config files
-**/*.list
+**/.env
 
 .vscode/**
 
