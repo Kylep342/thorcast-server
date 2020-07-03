@@ -14,7 +14,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	// _ "github.com/lib/pq"
 	_ "github.com/jackc/pgx/stdlib"
 )
 
@@ -46,6 +45,11 @@ func (conf *config) configure() {
 
 var conf = config{}
 
+// App contains necessary components to run the webserver
+// Router is a pointer to a mux Router
+// Logger is an http handler
+// DB is a pointer to a db
+// Redis is a pointer to a redis client
 type App struct {
 	Router *mux.Router
 	Logger http.Handler
@@ -53,11 +57,13 @@ type App struct {
 	Redis  *redis.Client
 }
 
+// Custom404Handler defines a catchall response for invalid API endpoints
 func (a *App) Custom404Handler(w http.ResponseWriter, r *http.Request) {
 	code := http.StatusNotFound
 	respondWithError(w, code, http.StatusText(code))
 }
 
+// HourlyForecast returns hourly forecast data for the specified city, state, and duration
 func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
@@ -143,7 +149,7 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Forecast returns the detailed forecast for a given city, state, and period
+// DetailedForecast returns the detailed forecast for a given city, state, and period
 // if period is not specified in the HTTP request, it defaults to today
 func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 
@@ -233,7 +239,7 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Random provides a forecast for a random city, state, and period
+// RandomDetailedForecast provides a forecast for a random city, state, and period
 // city and state are determined by selecting a random location from the database
 // period is selected randomly within the next week
 func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
@@ -281,7 +287,7 @@ func (a *App) RandomDetailedForecast(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
-// Initializes all endpoints for the api
+// InitializeRoutes creates all endpoints for the api
 func (a *App) InitializeRoutes() {
 	a.Router.HandleFunc("/api/forecast/detailed", a.DetailedForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}", "period", "{period:[a-zA-Z+]+}").Methods("GET")
 	a.Router.HandleFunc("/api/forecast/detailed", a.DetailedForecast).Queries("city", "{city:[a-zA-Z+]+}", "state", "{state:[a-zA-Z+]+}").Methods("GET")
@@ -291,7 +297,7 @@ func (a *App) InitializeRoutes() {
 	a.Router.NotFoundHandler = http.HandlerFunc(a.Custom404Handler)
 }
 
-// Initializes the application as a whole
+// Initialize creates the application as a whole
 func (a *App) Initialize() {
 	var err error
 	conf.configure()
@@ -316,7 +322,7 @@ func (a *App) Initialize() {
 	a.InitializeRoutes()
 }
 
-// Starts the app to listen on the port specitied by the env variable SERVER_PORT
+// Run starts the app to listen on the port specitied by the env variable SERVER_PORT
 func (a *App) Run() {
 	port := fmt.Sprintf(":%s", os.Getenv("SERVER_PORT"))
 	log.Fatal(http.ListenAndServe(port, a.Logger))

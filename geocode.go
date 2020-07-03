@@ -9,7 +9,8 @@ import (
 	"os"
 )
 
-const gcAPI = "https://maps.googleapis.com/maps/api/geocode/json"
+// const gcAPI = os.Getenv("GOOGLE_MAPS_API")
+var gcAPI = os.Getenv("GOOGLE_MAPS_API")
 
 // Struct holding data from the maps.google.com geocoding api
 type geocodeAPIResp struct {

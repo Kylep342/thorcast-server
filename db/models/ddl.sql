@@ -24,10 +24,12 @@ CREATE TABLE IF NOT EXISTS geocodex (
 
 ALTER TABLE geocodex OWNER TO thorcast;
 
+BEGIN;
 DROP TRIGGER IF EXISTS geocodex_update_timestamp ON geocodex;
 
 CREATE TRIGGER geocodex_update_timestamp
 BEFORE UPDATE ON geocodex
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_update_timestamp();
+COMMIT;
 

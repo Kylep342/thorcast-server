@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 // Root URL for weather.gov's api
-const weatherGovAPI = "https://api.weather.gov/points"
+var weatherGovAPI = os.Getenv("WEATHER_GOV_API")
 
-// Struct holding data from the request to api.weather.gov/points
+// Points holds data from the request to api.weather.gov/points
 type Points struct {
 	Context  []interface{} `json:"@context"`
 	ID       string        `json:"id"`
@@ -58,7 +59,7 @@ type Points struct {
 	} `json:"properties"`
 }
 
-// Struct holding data from the request from the Points.Properties.Forecast url
+// Forecasts holds data from the request from the Points.Properties.Forecast url
 type Forecasts struct {
 	Context  []interface{} `json:"@context"`
 	Type     string        `json:"type"`
