@@ -45,7 +45,7 @@ type geocodeAPIResp struct {
 	Status string `json:"status"`
 }
 
-// Struct holding the lat, lng pair from a maps.google.com geocode api response
+// Coordinates holds the lat, lng pair from a maps.google.com geocode api response
 type Coordinates struct {
 	Lat float64 `json:"lat"`
 	Lng float64 `json:"lng"`

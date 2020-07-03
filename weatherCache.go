@@ -65,7 +65,8 @@ func (a *App) LookupDetailedForecast(city City, state State, period Period) (str
 
 }
 
-// CacheHourlyForecasts
+// CacheHourlyForecasts persists all hourly forecasts in Redis as a list
+// with an expiry of one hour
 func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecasts Forecasts) []string {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
@@ -97,7 +98,9 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 	return hourlyForecasts[:hours]
 }
 
-// LookupHourlyForecast
+// LookupHourlyForecast checks Redis for the requested city, state pair over
+// the given hour range
+// If a key is found, it returns the requested number of hourly forecasts
 func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",

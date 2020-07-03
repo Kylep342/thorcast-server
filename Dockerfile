@@ -3,7 +3,7 @@ FROM golang:1.14-alpine AS build_base
 # setup of thorcast
 RUN apk add bash git
 WORKDIR /go/src/github.com/kylep342/thorcast-server
-ENV GO111MODULE=on
+# ENV GO111MODULE=on
 
 COPY go.mod .
 COPY go.sum .

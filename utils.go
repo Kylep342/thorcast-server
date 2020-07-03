@@ -111,7 +111,7 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-// Wrapper function to validate all inputs
+// SanitizeDetailedInputs is a wrapper function to validate all inputs
 // Returns City, State, Period, and nil error on success
 func SanitizeDetailedInputs(city string, state string, period string) (City, State, Period, error) {
 	cleanState, err := sanitizeState(state)
@@ -126,6 +126,8 @@ func SanitizeDetailedInputs(city string, state string, period string) (City, Sta
 	return cleanCity, cleanState, cleanPeriod, nil
 }
 
+// SanitizeHourlyInputs is a wrapper function to validate all inputs
+// Returns City, State, hours int64, and nil error on success
 func SanitizeHourlyInputs(city string, state string, hours string) (City, State, int64, error) {
 	cleanCity, cleanState, err := sanitizeLocation(city, state)
 	if err != nil {

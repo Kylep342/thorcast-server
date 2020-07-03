@@ -2,28 +2,25 @@ package main
 
 import (
 	"log"
-	"strings"
 )
 
-//
+// RegisterLocation persists a city, state, lat, lng group in the database
 func (a *App) RegisterLocation(l Location) error {
 	instertStmt := `
 	INSERT INTO geocodex (city, state, lat, lng, requests)
-	VALUES ($1, $2, $3, $4, 1)`
+	VALUES ($1, $2, $3, $4, 1)
+	ON CONFLICT ON CONSTRAINT geocodex_pkey DO UPDATE
+	SET requests = geocodex.requests+1
+	`
 	_, err := a.DB.Exec(instertStmt, l.City, l.State, l.Lat, l.Lng)
 	if err != nil {
-		// should handle a race condition where request to register was valid
-		// but another user concurrently made the request
-		// in that case, increment the `db:"requests"` field for that location
-		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			return err
-		} else {
-			log.Printf("An unexpected error occurred when inserting into geocodex\nError is: %s\n", err.Error())
-		}
+		log.Printf("An unexpected error occurred when inserting into geocodex\nError is: %s\n", err.Error())
+		return err
 	}
 	return nil
 }
 
+// IncrementLocation increments the requests counter of a location already stored in the database
 func (a *App) IncrementLocation(l Location) {
 	updateStmt := `
 	UPDATE geocodex

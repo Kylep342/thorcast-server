@@ -114,7 +114,8 @@ func fetchPoints(l Location) (Points, error) {
 	return p, nil
 }
 
-// Function to extract the URL for a forecast for the specified (Lat, Lng) pair
+// FetchDetailedForecastURL extracts the URL for a forecast from the
+// api.weather.gov/points response for the specified (Lat, Lng) pair
 func FetchDetailedForecastURL(l Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
@@ -124,7 +125,8 @@ func FetchDetailedForecastURL(l Location) (string, error) {
 	return point.Properties.Forecast, nil
 }
 
-// Function to extract the URL for an hourly forecast for the specified (Lat, Lng) pair
+// FetchHourlyForecastURL extracts the URL for an hourly forecast from the
+// api.weather.gov/points response for the specified (Lat, Lng) pair
 func FetchHourlyForecastURL(l Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
@@ -134,7 +136,8 @@ func FetchHourlyForecastURL(l Location) (string, error) {
 	return point.Properties.ForecastHourly, nil
 }
 
-// Funciton to extract all periods of forecasts for a requested city and state
+// FetchForecasts extract all periods of forecasts from the forecast url
+// for a requested city and state
 func FetchForecasts(forecastsURL string) (Forecasts, error) {
 	resp, err := http.Get(forecastsURL)
 	if err != nil {

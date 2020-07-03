@@ -110,7 +110,9 @@ func (a *App) HourlyForecast(w http.ResponseWriter, r *http.Request) {
 					} else {
 						l.SetCoords(coords)
 						if err = a.RegisterLocation(l); err != nil {
-							a.IncrementLocation(l)
+							// a.IncrementLocation(l)
+							code := http.StatusInternalServerError
+							respondWithError(w, code, http.StatusText(code))
 						}
 					}
 				default:
@@ -200,7 +202,9 @@ func (a *App) DetailedForecast(w http.ResponseWriter, r *http.Request) {
 					} else {
 						l.SetCoords(coords)
 						if err = a.RegisterLocation(l); err != nil {
-							a.IncrementLocation(l)
+							// a.IncrementLocation(l)
+							code := http.StatusInternalServerError
+							respondWithError(w, code, http.StatusText(code))
 						}
 					}
 				default:
