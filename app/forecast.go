@@ -101,14 +101,14 @@ func fetchPoints(l Location) (Points, error) {
 	resp, err := http.Get(requestURL)
 	log.Printf("response is %v\n", resp)
 	if err != nil {
-		log.Printf("Error is %e\n", err.Error())
+		log.Printf("Error is %s\n", err.Error())
 		return Points{}, err
 	}
 	var p Points
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&p)
 	if err != nil {
-		log.Printf("Error is %e\n", err.Error())
+		log.Printf("Error is %s\n", err.Error())
 		return Points{}, err
 	}
 	return p, nil
@@ -141,7 +141,7 @@ func FetchHourlyForecastURL(l Location) (string, error) {
 func FetchForecasts(forecastsURL string) (Forecasts, error) {
 	resp, err := http.Get(forecastsURL)
 	if err != nil {
-		log.Printf("Error is %e\n", err.Error())
+		log.Printf("Error is %s\n", err.Error())
 		return Forecasts{}, err
 	}
 	var forecasts Forecasts

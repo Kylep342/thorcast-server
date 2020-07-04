@@ -153,7 +153,7 @@ func sanitizeState(state string) (State, error) {
 	if cleanState, ok := stateCodes[key]; ok {
 		return State{asURL: cleanState, asKey: strings.ToLower(cleanState), asName: cleanState}, nil
 	}
-	return State{}, errors.New("Invalid state name.")
+	return State{}, errors.New("invalid state name")
 }
 
 func sanitizeLocation(city string, state string) (City, State, error) {
@@ -197,7 +197,7 @@ func sanitizePeriod(period string) (Period, error) {
 			dayOfWeek: strings.Title(m[1]),
 			isDaytime: false}, nil
 	} else {
-		return Period{}, errors.New("Invalid period.")
+		return Period{}, errors.New("invalid period")
 	}
 }
 
