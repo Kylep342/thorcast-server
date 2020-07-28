@@ -1,4 +1,4 @@
-package main
+package apis
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/kylep342/thorcast-server/pkg/models"
 )
 
 // Root URL for weather.gov's api
@@ -96,7 +98,7 @@ type Forecasts struct {
 	} `json:"properties"`
 }
 
-func fetchPoints(l Location) (Points, error) {
+func fetchPoints(l models.Location) (Points, error) {
 	requestURL := fmt.Sprintf("%s/%f,%f", weatherGovAPI, l.Lat, l.Lng)
 	resp, err := http.Get(requestURL)
 	log.Printf("response is %v\n", resp)
@@ -116,7 +118,7 @@ func fetchPoints(l Location) (Points, error) {
 
 // FetchDetailedForecastURL extracts the URL for a forecast from the
 // api.weather.gov/points response for the specified (Lat, Lng) pair
-func FetchDetailedForecastURL(l Location) (string, error) {
+func FetchDetailedForecastURL(l models.Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
 		log.Printf("Error caught.\n")
@@ -127,7 +129,7 @@ func FetchDetailedForecastURL(l Location) (string, error) {
 
 // FetchHourlyForecastURL extracts the URL for an hourly forecast from the
 // api.weather.gov/points response for the specified (Lat, Lng) pair
-func FetchHourlyForecastURL(l Location) (string, error) {
+func FetchHourlyForecastURL(l models.Location) (string, error) {
 	point, err := fetchPoints(l)
 	if err != nil {
 		log.Printf("Error caught.\n")

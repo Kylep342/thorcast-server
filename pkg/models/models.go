@@ -4,7 +4,7 @@
  *
  */
 
-package main
+package models
 
 // Location corresponds to a row in the geocodex table
 // The only fields that are read/written by the app are below
@@ -15,8 +15,8 @@ type Location struct {
 	Lng   float64 `db:"lng"`
 }
 
-// SetCoords will set the Lat and Lng values for a Location
-func (l *Location) SetCoords(o Coordinates) {
+// SetLocationCoordinates will set the Lat and Lng values for a Location
+func (l *Location) SetLocationCoordinates(o Coordinates) {
 	l.Lat = o.Lat
 	l.Lng = o.Lng
 }

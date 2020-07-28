@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestSanitizeState(t *testing.T) {
-	checkState, _ := sanitizeState("South Dakota")
+	checkState, _ := SanitizeState("South Dakota")
 
 	target := State{asURL: "SD", asKey: "sd", asName: "SD"}
 
@@ -18,7 +18,7 @@ func TestSanitizeState(t *testing.T) {
 }
 
 func TestSanitizeNotAState(t *testing.T) {
-	checkState, err := sanitizeState("West Dakota")
+	checkState, err := SanitizeState("West Dakota")
 
 	if err.Error() != "Invalid state name." {
 		t.Errorf("Error was incorrect, got: %v, want: Invalid state name.", err)
@@ -32,7 +32,7 @@ func TestSanitizeNotAState(t *testing.T) {
 }
 
 func TestSanitizeCity(t *testing.T) {
-	checkCity := sanitizeCity("Salt+Lake CITY")
+	checkCity := SanitizeCity("Salt+Lake CITY")
 
 	target := City{asURL: "Salt+Lake+CITY", asKey: "salt_lake_city", asName: "Salt Lake CITY"}
 

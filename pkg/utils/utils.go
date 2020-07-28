@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"errors"
@@ -114,7 +114,7 @@ func init() {
 // SanitizeDetailedInputs is a wrapper function to validate all inputs
 // Returns City, State, Period, and nil error on success
 func SanitizeDetailedInputs(city string, state string, period string) (City, State, Period, error) {
-	cleanState, err := sanitizeState(state)
+	cleanState, err := SanitizeState(state)
 	if err != nil {
 		return City{}, State{}, Period{}, err
 	}
@@ -122,7 +122,7 @@ func SanitizeDetailedInputs(city string, state string, period string) (City, Sta
 	if err != nil {
 		return City{}, State{}, Period{}, err
 	}
-	cleanCity := sanitizeCity(city)
+	cleanCity := SanitizeCity(city)
 	return cleanCity, cleanState, cleanPeriod, nil
 }
 
@@ -140,15 +140,15 @@ func SanitizeHourlyInputs(city string, state string, hours string) (City, State,
 	return cleanCity, cleanState, cleanHours, nil
 }
 
-// sanitizeCity creates a City struct from a given city name string
-func sanitizeCity(city string) City {
+// SanitizeCity creates a City struct from a given city name string
+func SanitizeCity(city string) City {
 	return City{asURL: separatorRE.ReplaceAllString(city, "+"),
 		asKey:  strings.ToLower(separatorRE.ReplaceAllString(city, "_")),
 		asName: separatorRE.ReplaceAllString(city, " ")}
 }
 
-// sanitizeState creates a State struct from a given state name string
-func sanitizeState(state string) (State, error) {
+// SanitizeState creates a State struct from a given state name string
+func SanitizeState(state string) (State, error) {
 	key := strings.ToLower(separatorRE.ReplaceAllString(state, " "))
 	if cleanState, ok := stateCodes[key]; ok {
 		return State{asURL: cleanState, asKey: strings.ToLower(cleanState), asName: cleanState}, nil
@@ -157,8 +157,8 @@ func sanitizeState(state string) (State, error) {
 }
 
 func sanitizeLocation(city string, state string) (City, State, error) {
-	cleanCity := sanitizeCity(city)
-	cleanState, err := sanitizeState(state)
+	cleanCity := SanitizeCity(city)
+	cleanState, err := SanitizeState(state)
 	return cleanCity, cleanState, err
 }
 
@@ -201,9 +201,9 @@ func sanitizePeriod(period string) (Period, error) {
 	}
 }
 
-// randomPeriod generates a random day of the week and time of day
+// RandomPeriod generates a random day of the week and time of day
 // and returns the corresponding Period struct
-func randomPeriod() Period {
+func RandomPeriod() Period {
 	dayOfWeek := time.Now().UTC().AddDate(0, 0, rand.Intn(7)).Weekday().String()
 	timeOfDay := timesOfDay[rand.Intn(2)]
 	p, _ := sanitizePeriod(fmt.Sprintf("%s%s", dayOfWeek, timeOfDay))

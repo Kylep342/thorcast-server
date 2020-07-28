@@ -1,4 +1,4 @@
-package main
+package cache
 
 import (
 	"fmt"
@@ -7,12 +7,21 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+
+	"github.com/kylep342/thorcast-server/pkg/apis"
+	"github.com/kylep342/thorcast-server/pkg/utils"
 )
 
 // CacheDetailedForecasts stores the provided forecasts
 // for the given City, State, and Period
 // key format is city.asKey_state.asKey_period.asKey
-func (a *App) CacheDetailedForecasts(city City, state State, period Period, forecasts Forecasts) string {
+func CacheDetailedForecasts(
+	cache *redis.Client
+	city utils.City,
+	state utils.State,
+	period utils.Period,
+	forecasts apis.Forecasts
+) string {
 	now := time.Now().UTC()
 	var detailedForecast string
 	for _, forecast := range forecasts.Properties.Periods {
@@ -34,7 +43,7 @@ func (a *App) CacheDetailedForecasts(city City, state State, period Period, fore
 			strings.ToLower(dayOfWeek),
 			timeOfDay)
 		// log.Printf("Key is %s\n", key)
-		err := a.Redis.Set(
+		err := cache.Set(
 			key,
 			forecast.DetailedForecast,
 			fcEndTime.Sub(now)).Err()
@@ -51,13 +60,18 @@ func (a *App) CacheDetailedForecasts(city City, state State, period Period, fore
 
 // LookupDetailedForecast tries to retrieve the forecast from the cache
 // for the given City, State, and Period
-func (a *App) LookupDetailedForecast(city City, state State, period Period) (string, error) {
+func LookupDetailedForecast(
+	cache *redis.Client
+	city utils.City,
+	state utils.State,
+	period utils.Period
+) (string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_%s",
 		city.asKey,
 		state.asKey,
 		period.asKey)
-	val, err := a.Redis.Get(key).Result()
+	val, err := cache.Get(key).Result()
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +81,13 @@ func (a *App) LookupDetailedForecast(city City, state State, period Period) (str
 
 // CacheHourlyForecasts persists all hourly forecasts in Redis as a list
 // with an expiry of one hour
-func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecasts Forecasts) []string {
+func CacheHourlyForecasts(
+	cache *redis.Client
+	city utils.City,
+	state utils.State,
+	hours int64,
+	forecasts apis.Forecasts
+) []string {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
 		city.asKey,
@@ -87,11 +107,11 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 			fc.WindDirection)
 		hourlyForecasts = append(hourlyForecasts, forecast)
 	}
-	err := a.Redis.RPush(key, hourlyForecasts).Err()
+	err := cache.RPush(key, hourlyForecasts).Err()
 	if err != nil {
 		log.Printf("Error occurred when appending an hourly forecast to a list\nError is: %s\n", err.Error())
 	}
-	err = a.Redis.ExpireAt(key, expiry).Err()
+	err = cache.ExpireAt(key, expiry).Err()
 	if err != nil {
 		log.Printf("Error occurred when setting an expiry for a list\nError is: %s\n", err.Error())
 	}
@@ -101,12 +121,17 @@ func (a *App) CacheHourlyForecasts(city City, state State, hours int64, forecast
 // LookupHourlyForecast checks Redis for the requested city, state pair over
 // the given hour range
 // If a key is found, it returns the requested number of hourly forecasts
-func (a *App) LookupHourlyForecast(city City, state State, hours int64) ([]string, error) {
+func LookupHourlyForecast(
+	cache *redis.Client,
+	city utils.City,
+	state utils.State,
+	hours int64
+) ([]string, error) {
 	key := fmt.Sprintf(
 		"%s_%s_hourly",
 		city.asKey,
 		state.asKey)
-	val, err := a.Redis.LRange(key, 0, hours-1).Result()
+	val, err := cache.LRange(key, 0, hours-1).Result()
 	if err != nil {
 		log.Printf("Error occurred when reading hourly forecasts from a list\nError is: %s\n", err.Error())
 		return []string{}, err
