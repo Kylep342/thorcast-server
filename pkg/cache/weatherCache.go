@@ -76,7 +76,6 @@ func LookupDetailedForecast(
 		return "", err
 	}
 	return val, nil
-
 }
 
 // CacheHourlyForecasts persists all hourly forecasts in Redis as a list

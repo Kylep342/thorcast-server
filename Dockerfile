@@ -13,7 +13,7 @@ RUN go mod download
 # compile the binary
 FROM build_base AS server_builder
 
-COPY app/ .
+COPY pkg/app/ .
 
 # RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o thorserver
 RUN go build -o thorserver
